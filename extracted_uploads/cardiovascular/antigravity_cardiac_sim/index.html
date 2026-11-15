@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-Gravity Cardiac Simulation UI</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div class="vignette"></div>
+
+    <!-- Simulated HUD / UI Overlay -->
+    <div class="ui-overlay">
+        <header class="top-bar">
+            <div class="brand">
+                <span class="pulse-dot"></span>
+                <h1>CARDIO-ZERO // ANTI-GRAVITY SIMULATOR</h1>
+            </div>
+            <div class="telemetry-badges">
+                <span class="badge">GRAVITY: <strong>0.00 G</strong></span>
+                <span class="badge" id="bpm-display">HR: <strong>69 BPM</strong></span>
+                <span class="badge">STATUS: <strong>SUSPENDED</strong></span>
+            </div>
+        </header>
+
+        <aside class="control-panel">
+            <h2>SIMULATION PARAMETERS</h2>
+
+            <div class="control-group">
+                <label for="bpm-slider">Cardiac Rate (BPM) <span id="bpm-val">69</span></label>
+                <input type="range" id="bpm-slider" min="40" max="160" value="69">
+            </div>
+
+            <div class="control-group">
+                <label for="antigrav-slider">Anti-Gravity Drift <span id="antigrav-val">100%</span></label>
+                <input type="range" id="antigrav-slider" min="0" max="200" value="100">
+            </div>
+
+            <div class="control-group">
+                <label for="shell-opacity">Myocardium Shell Opacity <span id="opacity-val">22%</span></label>
+                <input type="range" id="shell-opacity" min="5" max="80" value="22">
+            </div>
+
+            <div class="toggle-group">
+                <button class="toggle-btn active" id="toggle-vessels" data-active="true">Coronary Network</button>
+                <button class="toggle-btn active" id="toggle-chambers" data-active="true">Hemodynamics</button>
+                <button class="toggle-btn active" id="toggle-particles" data-active="true">Zero-G Motes</button>
+                <button class="toggle-btn active" id="toggle-autorotate" data-active="true">Auto-Orbit</button>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item"><span class="swatch red"></span> Oxygenated Arterial Flow</div>
+                <div class="legend-item"><span class="swatch blue"></span> Deoxygenated Venous Flow</div>
+                <div class="legend-item"><span class="swatch glass"></span> Pericardial Glass Matrix</div>
+            </div>
+        </aside>
+
+        <footer class="bottom-bar">
+            <span>DRAG TO ORBIT &bull; SCROLL TO ZOOM &bull; ZERO-G FIELD ACTIVE</span>
+            <button class="reset-btn" id="reset-camera">RESET VIEWPORT</button>
+        </footer>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

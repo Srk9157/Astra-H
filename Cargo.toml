@@ -1,0 +1,9 @@
+[workspace]
+members = [
+    "crates/astra-core",
+    "crates/astra-sensors",
+    "crates/astra-analytics",
+    "crates/astra-telemetry",
+    "crates/astra-server",
+]
+resolver = "2"

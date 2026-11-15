@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#071322" />
+  <title>ASTRA | Astronaut BioTelemetry</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"><span></span><span></span><span></span></div>
+        <div><strong>ASTRA</strong><small>MISSION SYSTEMS</small></div>
+      </div>
+      <div class="mission-tag"><i class="live-dot"></i> SIMULATION MODE</div>
+      <nav class="nav">
+        <a class="active" href="#overview"><span>◈</span> Overview</a>
+        <a href="#biometrics"><span>⌁</span> Bio telemetry</a>
+        <a href="#systems"><span>◉</span> Body systems</a>
+        <a href="#environment"><span>⌖</span> Environment</a>
+        <a href="#suit"><span>⬡</span> Suit systems</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="connection"><span class="signal">▂▄▆</span><div><b>LOCAL SIM LINK</b><small>All systems connected</small></div></div>
+        <div class="operator"><div class="avatar">OC</div><div><b>MISSION CONTROL</b><small>Operator console</small></div><span class="chevron">⌄</span></div>
+      </div>
+    </aside>
+
+    <main class="main-content" id="overview">
+      <header class="topbar">
+        <div><div class="eyebrow">MISSION / HUMAN PERFORMANCE</div><h1>BioTelemetry <span>Dashboard</span></h1></div>
+        <div class="top-actions"><div class="mission-clock"><small>MISSION ELAPSED</small><b id="missionClock">00:18:42:16</b></div><button class="icon-btn" title="Notifications">♧<i></i></button><div class="user-chip"><div class="avatar">AS</div><span>ASTRONAUT 01</span></div></div>
+      </header>
+
+      <section class="status-strip">
+        <div class="status-main"><i class="live-dot"></i><div><b id="systemStatus">NOMINAL</b><small>Overall biological status</small></div></div>
+        <div class="status-item"><small>CREW MEMBER</small><b>ASTRONAUT 01</b></div>
+        <div class="status-item"><small>MISSION PHASE</small><b>ORBITAL OPERATIONS</b></div>
+        <div class="status-item"><small>LAST SYNC</small><b id="lastSync">Just now</b></div>
+        <div class="status-controls"><button id="pauseBtn" class="button secondary">Ⅱ&nbsp; Pause</button><button id="alertBtn" class="button danger">⚠&nbsp; Simulate alert</button></div>
+      </section>
+
+      <section class="overview-grid">
+        <article class="panel human-panel">
+          <div class="panel-heading"><div><div class="eyebrow">HOLOGRAPHIC BODY SCAN</div><h2>Human physiology map</h2></div><span class="live-label"><i class="live-dot"></i> LIVE SIM</span></div>
+          <div class="human-visual">
+            <img src="assets/human-monitor-reference.png" alt="Futuristic human physiological monitoring reference" />
+            <div class="scan-line"></div>
+            <div class="scan-caption"><span>FULL BODY ANALYSIS</span><b>SCAN ID&nbsp; / &nbsp;AST-001</b></div>
+            <button class="organ-pin pin-heart" data-organ="Cardiovascular" aria-label="Cardiovascular system"></button>
+            <button class="organ-pin pin-lung" data-organ="Respiratory" aria-label="Respiratory system"></button>
+            <button class="organ-pin pin-brain" data-organ="Neuro & mental" aria-label="Neurological system"></button>
+            <div class="visual-hud hud-left">BIO-SCAN<br/><b>98.7%</b><small>CONFIDENCE</small></div>
+            <div class="visual-hud hud-right">SUBJECT<br/><b>HUMAN-01</b><small>VITAL LINK ACTIVE</small></div>
+          </div>
+          <div class="body-legend"><span><i class="legend-cyan"></i> Stable</span><span><i class="legend-violet"></i> Monitoring</span><span><i class="legend-amber"></i> Attention</span><span class="hint">Select a marker to inspect a system</span></div>
+        </article>
+
+        <article class="panel vitals-panel" id="biometrics">
+          <div class="panel-heading"><div><div class="eyebrow">LIVE BIOMETRICS</div><h2>Core vital signs</h2></div><span class="pill">AUTO REFRESH</span></div>
+          <div class="vitals-grid">
+            <div class="vital-card"><div class="vital-top"><span>HEART RATE</span><span class="vital-icon">♡</span></div><div class="vital-value"><b id="heartRate">72</b><small>BPM</small></div><div class="mini-chart"><canvas id="heartChart"></canvas></div><div class="vital-foot"><span class="good">● Normal range</span><span>60–100</span></div></div>
+            <div class="vital-card"><div class="vital-top"><span>SpO₂</span><span class="vital-icon">◌</span></div><div class="vital-value"><b id="spo2">98</b><small>%</small></div><div class="mini-chart"><canvas id="spoChart"></canvas></div><div class="vital-foot"><span class="good">● Normal range</span><span>95–100</span></div></div>
+            <div class="vital-card"><div class="vital-top"><span>BODY TEMP</span><span class="vital-icon">♨</span></div><div class="vital-value"><b id="temperature">36.8</b><small>°C</small></div><div class="mini-chart"><canvas id="tempChart"></canvas></div><div class="vital-foot"><span class="good">● Normal range</span><span>36.1–37.2</span></div></div>
+            <div class="vital-card"><div class="vital-top"><span>RESP. RATE</span><span class="vital-icon">⌁</span></div><div class="vital-value"><b id="respRate">16</b><small>/MIN</small></div><div class="mini-chart"><canvas id="respChart"></canvas></div><div class="vital-foot"><span class="good">● Normal range</span><span>12–20</span></div></div>
+          </div>
+          <div class="panel-subheading"><span>ECG / CARDIAC RHYTHM</span><span class="good">● SIGNAL ACQUIRED</span></div>
+          <div class="ecg-wrap"><canvas id="ecgChart"></canvas><span class="ecg-label">LEAD II</span></div>
+        </article>
+      </section>
+
+      <section class="lower-grid" id="systems">
+        <article class="panel system-panel">
+          <div class="panel-heading"><div><div class="eyebrow">PHYSIOLOGICAL OVERVIEW</div><h2>Body systems status</h2></div><button class="text-button" id="inspectAll">Inspect all ↗</button></div>
+          <div class="system-list">
+            <div class="system-row"><div class="system-symbol heart">♡</div><div class="system-info"><b>Cardiovascular</b><small>Heart rate · Blood pressure · ECG</small></div><div class="system-state good">NOMINAL</div><div class="system-bar"><i style="width:92%"></i></div><b class="system-score">92%</b></div>
+            <div class="system-row"><div class="system-symbol lungs">⌁</div><div class="system-info"><b>Respiratory</b><small>SpO₂ · Respiration · CO₂</small></div><div class="system-state good">NOMINAL</div><div class="system-bar"><i style="width:96%"></i></div><b class="system-score">96%</b></div>
+            <div class="system-row"><div class="system-symbol brain">◉</div><div class="system-info"><b>Neuro & mental</b><small>Stress index · Alertness · Cognitive load</small></div><div class="system-state monitor">MONITOR</div><div class="system-bar"><i style="width:84%"></i></div><b class="system-score">84%</b></div>
+            <div class="system-row"><div class="system-symbol muscle">✣</div><div class="system-info"><b>Musculoskeletal</b><small>Activity · Muscle load · Bone health</small></div><div class="system-state good">NOMINAL</div><div class="system-bar"><i style="width:89%"></i></div><b class="system-score">89%</b></div>
+            <div class="system-row"><div class="system-symbol sleep">☾</div><div class="system-info"><b>Sleep & fatigue</b><small>Sleep duration · Recovery · Fatigue</small></div><div class="system-state good">NOMINAL</div><div class="system-bar"><i style="width:90%"></i></div><b class="system-score">90%</b></div>
+          </div>
+        </article>
+
+        <article class="panel environment-panel" id="environment">
+          <div class="panel-heading"><div><div class="eyebrow">HABITAT TELEMETRY</div><h2>Environment & life support</h2></div><span class="pill">MODULE A</span></div>
+          <div class="environment-grid">
+            <div class="env-metric"><span>O₂ PARTIAL PRESSURE</span><b>21.2 <small>kPa</small></b><div class="env-track"><i style="width:88%"></i></div></div>
+            <div class="env-metric"><span>CO₂ LEVEL</span><b>0.08 <small>%</small></b><div class="env-track"><i style="width:18%"></i></div></div>
+            <div class="env-metric"><span>HABITAT PRESSURE</span><b>101.3 <small>kPa</small></b><div class="env-track"><i style="width:94%"></i></div></div>
+            <div class="env-metric"><span>HUMIDITY</span><b>45 <small>% RH</small></b><div class="env-track"><i style="width:45%"></i></div></div>
+            <div class="env-metric"><span>TEMPERATURE</span><b>22.4 <small>°C</small></b><div class="env-track"><i style="width:67%"></i></div></div>
+            <div class="env-metric"><span>WATER RESERVE</span><b>86 <small>%</small></b><div class="env-track"><i style="width:86%"></i></div></div>
+          </div>
+          <div class="life-support-foot"><span><i class="live-dot"></i> LIFE SUPPORT ONLINE</span><b>6 / 6 MODULES ACTIVE</b></div>
+        </article>
+      </section>
+
+      <section class="panel suit-panel" id="suit">
+        <div class="panel-heading"><div><div class="eyebrow">EXTRAVEHICULAR ACTIVITY</div><h2>Spacesuit control & monitoring</h2></div><span class="pill">SUIT LINK / EVA-01</span></div>
+        <div class="suit-grid">
+          <div class="suit-item"><span class="suit-icon">◉</span><div><small>SUIT PRESSURE</small><b>29.6 <em>kPa</em></b><span class="good">● Stable</span></div></div>
+          <div class="suit-item"><span class="suit-icon">❄</span><div><small>COOLING LOOP</small><b>18.2 <em>°C</em></b><span class="good">● Active</span></div></div>
+          <div class="suit-item"><span class="suit-icon">◈</span><div><small>OXYGEN SUPPLY</small><b>94 <em>%</em></b><span class="good">● Nominal</span></div></div>
+          <div class="suit-item"><span class="suit-icon">ϟ</span><div><small>POWER RESERVE</small><b>87 <em>%</em></b><span class="good">● Nominal</span></div></div>
+          <div class="suit-item"><span class="suit-icon">⌁</span><div><small>COMMUNICATION</small><b>LINKED</b><span class="good">● Encrypted</span></div></div>
+        </div>
+      </section>
+      <footer><span>ASTRA / ASTRONAUT SURVIVAL & TELEMETRY RESPONSE ARCHITECTURE</span><span>DEMO DATA · NOT FOR CLINICAL OR FLIGHT USE</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <div class="modal-backdrop" id="modalBackdrop"><div class="modal"><button class="modal-close" id="modalClose">×</button><div class="eyebrow">SYSTEM INSPECTION</div><h2 id="modalTitle">Cardiovascular</h2><p id="modalText">Live simulated telemetry details.</p><div class="modal-readings" id="modalReadings"></div><small>Values shown are illustrative simulation data, not medical measurements.</small></div></div>
+  <script src="app.js"></script>
+</body>
+</html>

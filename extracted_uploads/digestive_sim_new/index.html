@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digestive Processes & Antigravity Particle Simulation - NASA HUD</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div class="hud-container">
+        <!-- Header -->
+        <header class="hud-header">
+            <div class="logo-area">
+                <span class="pulse-dot"></span>
+                <h1>PROJECT ARES // DIGESTIVE PROCESSES & ANTIGRAVITY PARTICLE DYNAMICS</h1>
+            </div>
+            <div class="mission-status">
+                <span>SIM STATUS: <strong class="warning">ACTIVE</strong></span>
+                <span>GRAV-NULL: <strong class="accent">0.38G</strong></span>
+                <span id="utc-clock">00:00:00 UTC</span>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <main class="dashboard-grid">
+            <!-- Left Panel: Antigravity Particle Controls -->
+            <section class="panel control-panel">
+                <h2>ANTIGRAVITY PARTICLE MODULE</h2>
+                <div class="control-group">
+                    <label for="levitation-slider">Particle Levitation Force: <span id="levitation-val">65.4</span>%</label>
+                    <input type="range" id="levitation-slider" min="0" max="100" value="65.4" step="0.5">
+                </div>
+                <div class="control-group">
+                    <label for="absorption-slider">Nutrient Absorption Rate: <span id="absorption-val">72.0</span>%</label>
+                    <input type="range" id="absorption-slider" min="0" max="100" value="72.0" step="0.5">
+                </div>
+                <div class="control-group">
+                    <label for="enzyme-slider">Enzyme Activity Level: <span id="enzyme-val">83.0</span>%</label>
+                    <input type="range" id="enzyme-slider" min="0" max="100" value="83.0" step="0.5">
+                </div>
+                <div class="control-group">
+                    <label for="visceral-toggle">Visceral Antigravity Damper</label>
+                    <button id="visceral-toggle" class="btn active">ENGAGED</button>
+                </div>
+                <div class="telemetry-readouts">
+                    <div class="readout-box">
+                        <span class="label">PARTICLE FLUX</span>
+                        <span class="value" id="flux-val">184 p/s</span>
+                    </div>
+                    <div class="readout-box">
+                        <span class="label">FIELD COHERENCE</span>
+                        <span class="value" id="coherence-val">99.1%</span>
+                    </div>
+                </div>
+                <div class="emergency-box">
+                    <button id="purge-btn" class="btn emergency">PURGE GASTROINTESTINAL TOXINS</button>
+                </div>
+            </section>
+
+            <!-- Center Panel: Digestive HUD Visual & Particle Simulation -->
+            <section class="panel visual-panel">
+                <div class="panel-header">
+                    <h2>DIGESTIVE PROCESSES // PARTICLE FEED</h2>
+                    <span class="live-tag">LIVE HUD // CAM_04</span>
+                </div>
+                <div class="image-wrapper">
+                    <img src="assets/digestive_hud.png" alt="Digestive Processes Antigravity HUD" id="hud-image">
+                    <div class="grid-overlay"></div>
+                    <div class="scanner-line"></div>
+                    <div class="target-box" style="top: 80%; left: 50%;"></div>
+                </div>
+                <div class="waveform-container">
+                    <canvas id="particleCanvas" width="600" height="80"></canvas>
+                </div>
+            </section>
+
+            <!-- Right Panel: Metabolic & Cellular Telemetry -->
+            <section class="panel vitals-panel">
+                <h2>CELLULAR & NUTRIENT TELEMETRY</h2>
+                <div class="vital-card">
+                    <span class="v-label">NUTRIENT ABSORPTION EFFICIENCY</span>
+                    <span class="v-value" id="v-absorption">72.4%</span>
+                    <div class="v-bar"><div class="v-fill" style="width: 72%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">ENZYME CATALYTIC ACTIVITY</span>
+                    <span class="v-value" id="v-enzyme">83.1%</span>
+                    <div class="v-bar"><div class="v-fill" style="width: 83%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">CELLULAR METABOLIC FLUX</span>
+                    <span class="v-value">94.8%</span>
+                    <div class="v-bar"><div class="v-fill warning-fill" style="width: 95%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">GASTRIC ACIDITY (PH)</span>
+                    <span class="v-value" id="ph-val">1.8</span> <small>pH</small>
+                    <div class="v-bar"><div class="v-fill" style="width: 25%;"></div></div>
+                </div>
+                <div class="log-console" id="log-console">
+                    <p>[00:20:01] Antigravity particle levitation locked at 0.38G.</p>
+                    <p>[00:20:05] Digestive enzyme resonance stable.</p>
+                    <p>[00:20:10] Cellular food particle flux nominal.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity & Neural Telemetry HUD - NASA Space Apps Simulation</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div class="hud-container">
+        <!-- Header -->
+        <header class="hud-header">
+            <div class="logo-area">
+                <span class="pulse-dot"></span>
+                <h1>PROJECT ARES // ANTIGRAVITY & NEURAL TELEMETRY</h1>
+            </div>
+            <div class="mission-status">
+                <span>STATUS: <strong class="warning">STABLE</strong></span>
+                <span>MISSION: MARS HABITAT SURVIVAL</span>
+                <span id="utc-clock">00:00:00 UTC</span>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <main class="dashboard-grid">
+            <!-- Left Panel: Antigravity Control & Telemetry -->
+            <section class="panel control-panel">
+                <h2>ANTIGRAVITY FIELD MODULE</h2>
+                <div class="control-group">
+                    <label for="flux-slider">Quantum Flux Density: <span id="flux-val">84.2</span>%</label>
+                    <input type="range" id="flux-slider" min="0" max="100" value="84.2" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label for="gravity-slider">Gravitational Nullification: <span id="gravity-val">0.38</span> G</label>
+                    <input type="range" id="gravity-slider" min="0" max="1.0" value="0.38" step="0.01">
+                </div>
+                <div class="control-group">
+                    <label for="stabilizer-toggle">Inertial Damper Matrix</label>
+                    <button id="stabilizer-toggle" class="btn active">ENGAGED</button>
+                </div>
+                <div class="telemetry-readouts">
+                    <div class="readout-box">
+                        <span class="label">FIELD COHERENCE</span>
+                        <span class="value" id="coherence-val">99.4%</span>
+                    </div>
+                    <div class="readout-box">
+                        <span class="label">RESONANCE FREQ</span>
+                        <span class="value">142.7 MHz</span>
+                    </div>
+                </div>
+                <div class="emergency-box">
+                    <button id="mayday-btn" class="btn emergency">INITIATE EMERGENCY OVERRIDE</button>
+                </div>
+            </section>
+
+            <!-- Center Panel: Neural Scan & Visual Simulation -->
+            <section class="panel visual-panel">
+                <div class="panel-header">
+                    <h2>NEURAL CORTEX & BIOMETRIC FEED</h2>
+                    <span class="live-tag">LIVE FEED // CAM_01</span>
+                </div>
+                <div class="image-wrapper">
+                    <img src="assets/brain_scan.png" alt="Antigravity Neural Scan HUD" id="hud-image">
+                    <div class="grid-overlay"></div>
+                    <div class="scanner-line"></div>
+                    <div class="target-box" style="top: 70%; left: 75%;"></div>
+                </div>
+                <div class="waveform-container">
+                    <canvas id="eegCanvas" width="600" height="80"></canvas>
+                </div>
+            </section>
+
+            <!-- Right Panel: Patient / Astronaut Vitals -->
+            <section class="panel vitals-panel">
+                <h2>ASTRONAUT VITAL TELEMETRY</h2>
+                <div class="vital-card">
+                    <span class="v-label">SYS / DIA BLOOD PRESSURE</span>
+                    <span class="v-value"><span id="sys-val">120</span> / <span id="dia-val">094</span> <small>mmHg</small></span>
+                    <div class="v-bar"><div class="v-fill" style="width: 65%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">PULSE / HEART RATE</span>
+                    <span class="v-value" id="pul-val">124</span> <small>/min</small>
+                    <div class="v-bar"><div class="v-fill warning-fill" style="width: 80%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">OXYGEN SATURATION (SpO2)</span>
+                    <span class="v-value">98.2</span> <small>%</small>
+                    <div class="v-bar"><div class="v-fill" style="width: 98%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">CEREBRAL PERFUSION</span>
+                    <span class="v-value">74.5</span> <small>mmHg</small>
+                    <div class="v-bar"><div class="v-fill" style="width: 75%;"></div></div>
+                </div>
+                <div class="log-console" id="log-console">
+                    <p>[00:12:44] Antigravity field locked at 0.38G.</p>
+                    <p>[00:12:48] Neural feedback stability nominal.</p>
+                    <p>[00:12:52] Telemetry sync with Earth station active.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

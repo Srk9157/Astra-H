@@ -1,0 +1,22 @@
+/* ASTRA MEDVIS — frontend-only synthetic anatomical simulation.
+   No sensors, backend, or medical measurements are connected. */
+const $=id=>document.getElementById(id);
+const canvas=$('flowCanvas'),ctx=canvas.getContext('2d');
+const state={playing:true,mode:'airflow',bpm:12,particles:true,grid:true,labels:true,elapsed:0,last:0};
+let width=0,height=0,dpr=1,particles=[];
+function resize(){const r=canvas.getBoundingClientRect();width=r.width;height=r.height;dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);seed();}
+function seed(){particles=Array.from({length:115},()=>({branch:Math.random()<.5?-1:1,t:Math.random(),lane:Math.random(),radius:Math.random()*1.8+.6,offset:Math.random()*6.28}));}
+function point(p){const sign=p.branch;const t=p.t;const centerX=width*.5;const centerY=height*.20;const branchY=height*.38;let x,y;if(t<.34){const f=t/.34;x=centerX+sign*(2+f*width*.075);y=centerY+f*(branchY-centerY)}else{const f=(t-.34)/.66;const spread=(.08+f*.15)*width;const w=Math.sin(f*Math.PI*.95)*width*.055;x=centerX+sign*(spread+w*(p.lane-.5)*1.6);y=branchY+f*height*.38+Math.sin(f*9+p.offset)*height*.012}return{x,y}}
+function drawParticles(dt,phase){ctx.clearRect(0,0,width,height);if(!state.particles)return;const rgb=state.mode==='oxygen'?'92,150,255':state.mode==='bronchial'?'87,255,229':'190,255,255';const direction=Math.cos(phase)>=0?1:-1;ctx.globalCompositeOperation='screen';for(const p of particles){if(state.playing)p.t=(p.t+dt*(.12+state.bpm/160)*direction+1)%1;const q=point(p);const a=.3+.6*Math.sin(Math.PI*p.t);ctx.beginPath();ctx.fillStyle=`rgba(${rgb},${a})`;ctx.shadowColor=`rgba(${rgb},.95)`;ctx.shadowBlur=9;ctx.arc(q.x,q.y,p.radius*(state.mode==='oxygen'?1.25:1),0,Math.PI*2);ctx.fill()}ctx.shadowBlur=0;ctx.globalCompositeOperation='source-over'}
+function updateTelemetry(phase){const breath=(1-Math.cos(phase))/2;const flow=Math.abs(Math.sin(phase));$('rr').textContent=state.bpm;$('spo2').textContent=(97.5+breath*.8).toFixed(1);$('volume').textContent=(.3+breath*.4).toFixed(2);$('velocity').textContent=(flow*.62).toFixed(2);$('volumeBar').style.width=(30+breath*55)+'%';$('velocityBar').style.width=(8+flow*84)+'%';$('phaseLabel').textContent=Math.sin(phase)>=0?'INHALATION':'EXHALATION';$('wavecursor').style.left=((state.elapsed*state.bpm/60)%1*100)+'%'}
+function makeWave(){const points=[];for(let i=0;i<=280;i++){const x=i/280*700;const y=28-17*Math.sin(i/280*Math.PI*8);points.push((i?'L':'M')+x.toFixed(2)+' '+y.toFixed(2))}$('wavePath').setAttribute('d',points.join(' '))}
+function animate(ts){const dt=state.last?Math.min((ts-state.last)/1000,.05):0;state.last=ts;if(state.playing)state.elapsed+=dt;const phase=state.elapsed*state.bpm/60*Math.PI*2;drawParticles(state.playing?dt:0,phase);updateTelemetry(phase);requestAnimationFrame(animate)}
+function modeSet(mode){state.mode=mode;document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));$('modeCaption').textContent=({airflow:'AIRFLOW DYNAMICS',oxygen:'OXYGEN DIFFUSION',bronchial:'BRONCHIAL MAPPING'})[mode];}
+document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>modeSet(b.dataset.mode)));
+$('particlesToggle').addEventListener('change',e=>state.particles=e.target.checked);
+$('gridToggle').addEventListener('change',e=>$('scanGrid').hidden=!e.target.checked);
+$('labelsToggle').addEventListener('change',e=>$('annotations').hidden=!e.target.checked);
+$('playButton').addEventListener('click',()=>{state.playing=!state.playing;document.body.classList.toggle('paused',!state.playing);$('playButton').innerHTML=state.playing?'Ⅱ <span>PAUSE SIMULATION</span>':'▶ <span>RESUME SIMULATION</span>'});
+$('resetButton').addEventListener('click',()=>{state.elapsed=0;state.playing=true;document.body.classList.remove('paused');$('playButton').innerHTML='Ⅱ <span>PAUSE SIMULATION</span>';seed()});
+$('speedRange').addEventListener('input',e=>{state.bpm=+e.target.value;$('speedText').textContent=state.bpm+' BPM';document.querySelectorAll('.image-frame img,.breathing-glow').forEach(el=>el.style.animationDuration=(60/state.bpm)+'s')});
+function clock(){const d=new Date();$('clock').textContent=d.toISOString().slice(11,19)+' UTC'}clock();setInterval(clock,1000);makeWave();resize();new ResizeObserver(resize).observe($('viewport'));requestAnimationFrame(animate);

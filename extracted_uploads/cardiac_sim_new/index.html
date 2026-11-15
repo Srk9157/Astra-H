@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardiac & Cardiovascular Antigravity Simulation - NASA HUD</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div class="hud-container">
+        <!-- Header -->
+        <header class="hud-header">
+            <div class="logo-area">
+                <span class="pulse-dot"></span>
+                <h1>PROJECT ARES // CARDIAC & CARDIOVASCULAR ANTIGRAVITY DYNAMICS</h1>
+            </div>
+            <div class="mission-status">
+                <span>SIM STATUS: <strong class="warning">ACTIVE</strong></span>
+                <span>GRAV-NULL: <strong class="accent">0.38G</strong></span>
+                <span id="utc-clock">00:00:00 UTC</span>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <main class="dashboard-grid">
+            <!-- Left Panel: Cardiac Controls -->
+            <section class="panel control-panel">
+                <h2>CARDIOVASCULAR CONTROL MODULE</h2>
+                <div class="control-group">
+                    <label for="bpm-slider">Heart Rate / Pump Frequency: <span id="bpm-val">72</span> BPM</label>
+                    <input type="range" id="bpm-slider" min="40" max="160" value="72" step="1">
+                </div>
+                <div class="control-group">
+                    <label for="spo2-slider">Blood Oxygen Saturation (SpO2): <span id="spo2-val">98</span>%</label>
+                    <input type="range" id="spo2-slider" min="80" max="100" value="98" step="1">
+                </div>
+                <div class="control-group">
+                    <label for="pressure-slider">Systolic Blood Pressure: <span id="pressure-val">118</span> mmHg</label>
+                    <input type="range" id="pressure-slider" min="80" max="180" value="118" step="1">
+                </div>
+                <div class="control-group">
+                    <label for="damper-toggle">Cardiovascular Antigravity Damper</label>
+                    <button id="damper-toggle" class="btn active">ENGAGED</button>
+                </div>
+                <div class="telemetry-readouts">
+                    <div class="readout-box">
+                        <span class="label">CARDIAC OUTPUT</span>
+                        <span class="value" id="output-val">5.2 L/min</span>
+                    </div>
+                    <div class="readout-box">
+                        <span class="label">VASCULAR STRESS</span>
+                        <span class="value" id="stress-val">12.4 kPa</span>
+                    </div>
+                </div>
+                <div class="emergency-box">
+                    <button id="override-btn" class="btn emergency">EMERGENCY DEFIBRILLATION OVERRIDE</button>
+                </div>
+            </section>
+
+            <!-- Center Panel: Cardiac HUD Visual & ECG Waveform -->
+            <section class="panel visual-panel">
+                <div class="panel-header">
+                    <h2>CARDIAC TELEMETRY FEED</h2>
+                    <span class="live-tag">LIVE HUD // CAM_08</span>
+                </div>
+                <div class="image-wrapper">
+                    <img src="assets/cardiac_hud.png" alt="Cardiac Antigravity HUD" id="hud-image">
+                    <div class="grid-overlay"></div>
+                    <div class="scanner-line"></div>
+                    <div class="target-box" style="top: 55%; left: 38%;"></div>
+                </div>
+                <div class="waveform-container">
+                    <canvas id="ecgCanvas" width="600" height="80"></canvas>
+                </div>
+            </section>
+
+            <!-- Right Panel: Vitals & Logs -->
+            <section class="panel vitals-panel">
+                <h2>REAL-TIME VASCULAR VITALS</h2>
+                <div class="vital-card">
+                    <span class="v-label">HEART RATE (BPM)</span>
+                    <span class="v-value" id="v-bpm">72 <small>BPM</small></span>
+                    <div class="v-bar"><div class="v-fill" style="width: 45%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">BLOOD OXYGEN (SpO2)</span>
+                    <span class="v-value" id="v-spo2">98 <small>%</small></span>
+                    <div class="v-bar"><div class="v-fill" style="width: 98%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">PULSE PRESSURE (BP)</span>
+                    <span class="v-value" id="v-bp">118/76 <small>mmHg</small></span>
+                    <div class="v-bar"><div class="v-fill warning-fill" style="width: 65%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">MYOCARDIAL PERFUSION</span>
+                    <span class="v-value">99.2%</span>
+                    <div class="v-bar"><div class="v-fill" style="width: 99%;"></div></div>
+                </div>
+                <div class="log-console" id="log-console">
+                    <p>[00:10:02] Cardiovascular antigravity damper locked at 0.38G.</p>
+                    <p>[00:10:06] ECG baseline rhythm stable (Sinus rhythm).</p>
+                    <p>[00:10:12] Oxygen saturation nominal at 98%.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

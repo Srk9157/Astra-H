@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASTRA H â€“ Astronaut Survival & Telemetry Response Architecture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+
+<body>
+
+  <!-- Top Cyberpunk HUD Header -->
+  <header class="hud-header">
+    <div class="brand-section">
+      <div class="brand-logo">
+        <span>â–²</span> ASTRA <span>//</span> H
+      </div>
+      <div class="brand-subtitle">
+        NASA SPACE APP CHALLENGES // 12 SURVIVAL PARAMETER SYSTEMS & SPACE SUIT TELEMETRY
+      </div>
+    </div>
+
+    <!-- Distance from Home Planet (Anchor) & Mission Telemetry -->
+    <div class="mission-stats">
+      <div class="stat-pill">
+        <span class="label">ANCHOR (EARTH):</span>
+        <span class="val" id="dist-km">1,634,400 km</span>
+        <span class="val" id="dist-au" style="font-size:10px; color:var(--text-secondary);">(0.0109 AU)</span>
+      </div>
+      <div class="stat-pill">
+        <span class="label">COMMS DELAY:</span>
+        <span class="val" id="light-delay">5.45s</span>
+      </div>
+      <div class="stat-pill">
+        <span class="label">DESTINATION:</span>
+        <span class="val">Kepler-296f</span>
+      </div>
+      <div class="devices-sync-badge">
+        <div class="pulse-dot"></div>
+        <span>SYNCED DEVICES: <strong id="device-count">2</strong></span>
+      </div>
+      <div class="stat-pill" style="border-color: rgba(0, 255, 136, 0.4);">
+        <span class="val" id="connection-status" style="color:var(--neon-green);">CONNECTING TO RUST CORE...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Master Real-Time Interactive Simulator Control Deck -->
+  <section class="sim-deck">
+    <div class="sim-deck-title">
+      <span>âš¡</span> REAL-TIME TELEMETRY SIMULATOR DECK:
+    </div>
+    <div class="sim-buttons-group">
+      <button id="btn-sim-exercise" class="sim-action-btn" onclick="triggerSimExercise()">
+        <span>ðŸ”¥</span> Trigger Cardiac Exercise
+      </button>
+      <button id="btn-sim-hypoxia" class="sim-action-btn" onclick="triggerSimHypoxia()">
+        <span>âš ï¸</span> Simulate Hypoxia (Low SpOâ‚‚)
+      </button>
+      <button id="btn-sim-stress" class="sim-action-btn" onclick="triggerSimStress()">
+        <span>ðŸ§ </span> Spike Cognitive Stress
+      </button>
+      <button id="btn-sim-radiation" class="sim-action-btn" onclick="triggerSimRadiation()">
+        <span>â˜¢ï¸</span> Solar Radiation Flare
+      </button>
+      <button id="btn-sim-leak" class="sim-action-btn" onclick="triggerSimSuitLeak()">
+        <span>ðŸš¨</span> Spacesuit Puncture Leak
+      </button>
+      <button class="sim-action-btn btn-reset" onclick="resetSimNominal()">
+        <span>ðŸ”„</span> Reset All to Nominal
+      </button>
+    </div>
+  </section>
+
+  <!-- Quick EVA Spacewalk Telemetry Strip -->
+  <section class="eva-telemetry-strip">
+    <div class="eva-card card-amber">
+      <div class="eva-card-title">â™¥ Heart Rate</div>
+      <div class="eva-card-value"><span id="eva-hr">72</span> <span class="unit">Bpm</span></div>
+    </div>
+    <div class="eva-card card-green">
+      <div class="eva-card-title">Oâ‚‚ Blood Saturation</div>
+      <div class="eva-card-value"><span id="eva-spo2">98.2</span> <span class="unit">%</span></div>
+    </div>
+    <div class="eva-card">
+      <div class="eva-card-title">Body Temperature</div>
+      <div class="eva-card-value"><span id="eva-temp">37.0</span> <span class="unit">Â°C</span></div>
+    </div>
+    <div class="eva-card card-amber">
+      <div class="eva-card-title">Bone Loss Index</div>
+      <div class="eva-card-value"><span id="eva-bone">4.2</span> <span class="unit">%</span></div>
+    </div>
+    <div class="eva-card">
+      <div class="eva-card-title">Suit Internal Pres.</div>
+      <div class="eva-card-value"><span id="eva-psi">4.30</span> <span class="unit">psi</span></div>
+    </div>
+    <div class="eva-card">
+      <div class="eva-card-title">Primary Oâ‚‚ Reserve</div>
+      <div class="eva-card-value"><span id="eva-o2">5.9</span> <span class="unit">kg</span></div>
+    </div>
+    <div class="eva-card card-green">
+      <div class="eva-card-title">Suit Battery</div>
+      <div class="eva-card-value"><span id="eva-battery">89</span> <span class="unit">%</span></div>
+    </div>
+    <div class="eva-card card-red">
+      <div class="eva-card-title">Temp External</div>
+      <div class="eva-card-value"><span id="eva-ext-temp">121</span> <span class="unit">Â°C</span></div>
+    </div>
+  </section>
+
+  <!-- Main Container: Sidebar Navigation + Viewport -->
+  <div class="main-container">
+    <!-- Sidebar Navigation with All Systems & Dedicated Suit Section -->
+    <aside class="widget-sidebar">
+      <div class="sidebar-title">SURVIVAL PARAMETERS</div>
+      <button class="nav-widget-btn active" data-view="overview">
+        <span>â¬¢ 1. Physical body & composition</span>
+        <span class="badge" style="color:var(--neon-green);">CYBERPUNK HUD</span>
+      </button>
+      <button class="nav-widget-btn" data-view="view-cardio">
+        <span>2. Cardiovascular system</span>
+        <span class="badge">3D ANTI-GRAV</span>
+      </button>
+      <button class="nav-widget-btn" data-view="view-respiratory">
+        <span>3. Respiratory system</span>
+        <span class="badge">PULMONARY SIM</span>
+      </button>
+      <button class="nav-widget-btn" data-view="view-neuro">
+        <span>4. Neurological & brain function</span>
+        <span class="badge">ADS1299 EEG</span>
+      </button>
+      <button class="nav-widget-btn" data-view="view-mental">
+        <span>5. Mental & psychological health</span>
+        <span class="badge">SOLITARY</span>
+      </button>
+      <button class="nav-widget-btn" data-view="view-sleep">
+        <span>6. Sleep & biological rhythms</span>
+        <span class="badge">CIRCADIAN</span>
+      </button>
+      <button class="nav-widget-btn" data-view="view-metabolic">
+        <span>7. Metabolic & endocrine systems</span>
+        <span class="badge">HORMONAL</span>
+      </button>
+      <button class="nav-widget-btn" data-view="view-digestive">
+        <span>8. Digestive, nutrition & hydration</span>
+        <span class="badge">GASTRIC</span>
+      </button>
+      <button class="nav-widget-btn" data-view="view-immune">
+        <span>9. Immune, cellular & genetic health</span>
+        <span class="badge">GENOMICS</span>
+      </button>
+      <button class="nav-widget-btn" data-view="view-sensory">
+        <span>10. Sensory & musculoskeletal</span>
+        <span class="badge">SANS IOP</span>
+      </button>
+      <button class="nav-widget-btn" data-view="view-environment">
+        <span>11. Earth atmosphere & environment</span>
+        <span class="badge">BMP280/COâ‚‚</span>
+      </button>
+      <button class="nav-widget-btn" data-view="view-survival">
+        <span>12. External survival & safety</span>
+        <span class="badge">EVA SUIT</span>
+      </button>
+
+      <div class="sidebar-title" style="margin-top:16px;">SPACESUIT MONITORING</div>
+      <button class="nav-widget-btn" data-view="view-suit" style="border-left: 3px solid var(--neon-cyan); background: rgba(0, 240, 255, 0.08);">
+        <span>â¬¡ Astronaut Space Suit</span>
+        <span class="badge" style="color:var(--neon-green);">12 ZONES / 188 CHK</span>
+      </button>
+    </aside>
+
+    <!-- Dashboard Viewport -->
+    <main class="dashboard-viewport">
+      <!-- Active Mission Alert Banner -->
+      <div id="mission-status-banner" class="alert-banner">
+        <span id="mission-status-text">STATUS: NOMINAL // ALL 12 SURVIVAL SYSTEMS NOMINAL</span>
+        <button class="btn-ack" onclick="alert('Telemetry Logged & Synced with Remote Station')">ACKNOWLEDGE</button>
+      </div>
+
+      <!-- VIEW 0 & 1: FULL HUMAN BODY CYBERPUNK HUD (PHYSICAL BODY & COMPOSITION UI) -->
+      <div id="overview" class="widget-view active-view">
+        <div class="hud-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">1. PHYSICAL BODY AND BODY COMPOSITION // FULL CYBERPUNK HUD</div>
+              <div style="font-size:10px; color:var(--text-secondary); margin-top:3px;">
+                SYNAPSE SCANNER & HOLOGRAPHIC PHYSIOLOGY MAP // CONTINUOUS LEAD-I ECG OSCILLOSCOPE
+              </div>
+            </div>
+            <div class="badge" style="color:var(--neon-green);">60 FPS LIVE HUD</div>
+          </div>
+
+          <div class="canvas-panel-grid" style="margin-bottom:16px;">
+            <!-- Cyberpunk Holographic Body Scan & Interactive Organ Pins -->
+            <div class="human-panel" style="padding:0;">
+              <div class="human-visual">
+                <img src="assets/human-monitor-reference.png" alt="Futuristic human physiological monitoring reference" />
+                <div class="scan-line"></div>
+                <div class="scan-caption">
+                  <span>FULL BODY ANALYSIS</span>
+                  <b>SCAN ID: AST-001</b>
+                </div>
+                <!-- Interactive Organ Pins that Navigate to Respective Views -->
+                <button class="organ-pin pin-heart" data-organ="Cardiovascular" aria-label="Cardiovascular system" title="Inspect Cardiovascular"></button>
+                <button class="organ-pin pin-lung" data-organ="Respiratory" aria-label="Respiratory system" title="Inspect Respiratory"></button>
+                <button class="organ-pin pin-brain" data-organ="Neuro & mental" aria-label="Neurological system" title="Inspect Neuro"></button>
+                <button class="organ-pin pin-endocrine" data-organ="Endocrine" aria-label="Endocrine & hormonal system" title="Inspect Endocrine"></button>
+                <button class="organ-pin pin-stomach" data-organ="Digestive" aria-label="Digestive system" title="Inspect Digestive"></button>
+                <button class="organ-pin pin-suit" data-organ="Spacesuit" aria-label="Astronaut Space Suit" title="Inspect Space Suit"></button>
+                <div class="visual-hud hud-left">
+                  BIO-SCAN<br />
+                  <b>98.7%</b>
+                  <small>CONFIDENCE</small>
+                </div>
+                <div class="visual-hud hud-right">
+                  SUBJECT<br />
+                  <b>ASTRONAUT-01</b>
+                  <small>VITAL LINK ACTIVE</small>
+                </div>
+              </div>
+              <div class="body-legend">
+                <span><i class="legend-cyan"></i> Stable</span>
+                <span><i class="legend-violet"></i> Monitoring</span>
+                <span><i class="legend-amber"></i> Attention</span>
+                <span class="hint">Click pins on body to inspect specific system â†—</span>
+              </div>
+            </div>
+
+            <!-- Lead-I ECG Continuous Moving Oscilloscope & Real-Time Hemodynamic Core -->
+            <div>
+              <div class="panel-header" style="margin-top:0;">
+                <div class="panel-title" style="font-size:11px;">LEAD-I ECG OSCILLOSCOPE (AD8232 CLINICAL TELEMETRY)</div>
+                <div class="badge" style="color:var(--neon-amber);" id="cardio-rhythm">Normal Sinus Rhythm</div>
+              </div>
+              <div class="waveform-box">
+                <!-- High-precision continuously moving oscilloscope canvas -->
+                <canvas id="ecgCanvas" class="waveform-canvas"></canvas>
+              </div>
+              <div class="telemetry-grid" style="margin-top:12px;">
+                <div class="metric-card">
+                  <div class="metric-label">BLOOD PRESSURE</div>
+                  <div class="metric-value" id="cardio-bp">118/76</div>
+                  <div class="metric-sub">MAP: <span id="cardio-map">90.0</span> mmHg</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">CARDIAC OUTPUT</div>
+                  <div class="metric-value" id="cardio-co">5.40 L/min</div>
+                  <div class="metric-sub">Ejection Fraction: <span id="cardio-ef">62.5%</span></div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">AUTONOMIC HRV (RMSSD)</div>
+                  <div class="metric-value"><span id="cardio-rmssd">42.1</span> ms</div>
+                  <div class="metric-sub">SDNN: <span id="cardio-sdnn">54.2</span> ms</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">GEIGER COUNTER</div>
+                  <div class="metric-value" id="env-radiation">22.4 ÂµSv/h</div>
+                  <div class="metric-sub">Solar Flux: Nominal</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comprehensive Body Composition & Physical Parameters Grid -->
+          <div style="font-size:11px; color:var(--neon-cyan); letter-spacing:1px; margin-bottom:10px;">
+            BODY COMPOSITION & ANATOMICAL METRIC TELEMETRY:
+          </div>
+          <div class="telemetry-grid" style="margin-bottom:12px;">
+            <div class="metric-card">
+              <div class="metric-label">OVERALL READINESS</div>
+              <div class="metric-value" style="font-size:14px; color:var(--neon-green);" id="phys-cond">Optimal Readiness</div>
+              <div class="metric-sub">Wellness Score: <span id="phys-wellness">95.4%</span></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">BODY MEASUREMENTS</div>
+              <div class="metric-value">182 cm / 78.4 kg</div>
+              <div class="metric-sub">BMI: 23.6 | Body Fat: 14.8%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">BODY TEMPERATURE (MAX30205)</div>
+              <div class="metric-value" id="phys-core-temp">37.0 Â°C</div>
+              <div class="metric-sub">Skin Temp: <span id="phys-skin-temp">34.8 Â°C</span></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">HYDRATION & TOTAL WATER</div>
+              <div class="metric-value" id="phys-tbw">45.2 L</div>
+              <div class="metric-sub">Balance: +120 mL (Euhydrated)</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">MUSCLE MASS & FATIGUE</div>
+              <div class="metric-value">Mass: 38.6 kg</div>
+              <div class="metric-sub">Fatigue: <span id="phys-fatigue">18.5%</span></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">BONE HEALTH & MASS</div>
+              <div class="metric-value">3.25 kg</div>
+              <div class="metric-sub">T-Score: -0.4 | Bone Loss: 4.2%</div>
+            </div>
+          </div>
+
+          <div class="telemetry-grid">
+            <div class="metric-card">
+              <div class="metric-label">SKIN INTEGRITY & MOISTURE</div>
+              <div class="metric-value">Intact (62%)</div>
+              <div class="metric-sub">Barrier: High | No dermatitis</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">DAILY PHYSICAL ACTIVITY</div>
+              <div class="metric-value"><span id="phys-steps">8,420</span> Steps</div>
+              <div class="metric-sub">Duration: 45 min T2 Treadmill</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">ENERGY EXPENDITURE</div>
+              <div class="metric-value" id="phys-energy">2,680 kcal</div>
+              <div class="metric-sub">REE: 1,740 kcal | Recovery: 91%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">PAIN SELF-ASSESSMENT</div>
+              <div class="metric-value" style="color:var(--neon-green);">Score: 0 / 10</div>
+              <div class="metric-sub">Zero physical discomfort</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: CARDIOVASCULAR SYSTEM & HEMODYNAMICS (Project Ares Cardiac Telemetry HUD UI) -->
+      <div id="view-cardio" class="widget-view">
+        <div class="hud-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">2. CARDIOVASCULAR SYSTEM & HEMODYNAMICS // PROJECT ARES CARDIAC TELEMETRY</div>
+              <div style="font-size:10px; color:var(--text-secondary); margin-top:3px;">
+                CARDIAC ANTIGRAVITY DYNAMICS // CONTINUOUS LEAD-I ECG OSCILLOSCOPE // HEMODYNAMIC STRESS MONITOR
+              </div>
+            </div>
+            <div class="badge" style="color:var(--neon-green);">CARDIAC-ZERO ACTIVE</div>
+          </div>
+
+          <!-- 3-Column ARES Sci-Fi HUD Layout (from cardiac_antigravity_simulation.zip) -->
+          <div class="ares-dashboard-grid" style="margin-bottom:16px;">
+            <!-- Left Panel: Cardiovascular Control Module -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>▲</span> CARDIOVASCULAR CONTROL MODULE
+              </div>
+
+              <div class="ares-control-group">
+                <label>Heart Rate / Frequency: <span id="cardio-bpm-val">72</span> BPM</label>
+                <input type="range" id="cardio-bpm-slider" class="ares-slider" min="40" max="160" value="72" step="1">
+              </div>
+
+              <div class="ares-control-group">
+                <label>Blood Oxygen (SpO₂): <span id="cardio-spo2-val">98</span>%</label>
+                <input type="range" id="cardio-spo2-slider" class="ares-slider" min="80" max="100" value="98" step="1">
+              </div>
+
+              <div class="ares-control-group">
+                <label>Systolic Pressure: <span id="cardio-pressure-val">118</span> mmHg</label>
+                <input type="range" id="cardio-pressure-slider" class="ares-slider" min="80" max="180" value="118" step="1">
+              </div>
+
+              <div class="ares-control-group">
+                <label>Cardiovascular Antigravity Damper</label>
+                <button id="cardio-damper-toggle" class="ares-btn active">ENGAGED</button>
+              </div>
+
+              <div class="ares-readout-row">
+                <div class="ares-readout-box">
+                  <span class="label">CARDIAC OUTPUT</span>
+                  <span class="val" id="cardio-output-val">5.2 L/min</span>
+                </div>
+                <div class="ares-readout-box">
+                  <span class="label">VASCULAR STRESS</span>
+                  <span class="val" id="cardio-stress-val">12.4 kPa</span>
+                </div>
+              </div>
+
+              <div style="margin-top:auto;">
+                <button id="cardio-override-btn" class="ares-btn emergency" style="width:100%;">EMERGENCY DEFIBRILLATION OVERRIDE</button>
+              </div>
+            </section>
+
+            <!-- Center Panel: Cardiac Telemetry Feed (Hologram Image & Continuous ECG Waveform) -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>◉</span> CARDIAC TELEMETRY FEED
+                <span class="badge" style="margin-left:auto; font-size:9px; color:var(--neon-cyan);">LIVE HUD // CAM_08</span>
+              </div>
+
+              <div class="ares-image-wrapper">
+                <img src="assets/cardiac_hud.png" alt="Cardiac Antigravity HUD" id="hud-image-cardio">
+                <div class="grid-overlay"></div>
+                <div class="scanner-line"></div>
+                <div class="target-box" style="top: 55%; left: 38%;"></div>
+              </div>
+
+              <!-- Continuous Lead-I ECG Waveform Canvas -->
+              <div class="ares-waveform-box">
+                <canvas id="cardioEcgCanvas" width="600" height="90"></canvas>
+              </div>
+            </section>
+
+            <!-- Right Panel: Real-Time Vascular Vitals & Logs -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>◈</span> REAL-TIME VASCULAR VITALS
+              </div>
+
+              <div class="ares-metric-card">
+                <div class="metric-label">HEART RATE (BPM)</div>
+                <div class="metric-value" id="cardio-v-bpm" style="color:var(--neon-amber);">72 <small style="font-size:12px;">BPM</small></div>
+                <div class="ares-meter-track" style="margin-top:6px;"><div class="ares-meter-fill" id="cardio-bpm-bar" style="width: 45%;"></div></div>
+              </div>
+
+              <div class="ares-metric-card">
+                <div class="metric-label">BLOOD OXYGEN (SpO₂)</div>
+                <div class="metric-value" id="cardio-v-spo2" style="color:var(--neon-cyan);">98 <small style="font-size:12px;">%</small></div>
+                <div class="ares-meter-track" style="margin-top:6px;"><div class="ares-meter-fill" id="cardio-spo2-bar" style="width: 98%;"></div></div>
+              </div>
+
+              <div class="ares-metric-card">
+                <div class="metric-label">PULSE PRESSURE (BP)</div>
+                <div class="metric-value" id="cardio-v-bp" style="color:var(--neon-green);">118/76 <small style="font-size:12px;">mmHg</small></div>
+                <div class="ares-meter-track" style="margin-top:6px;"><div class="ares-meter-fill" id="cardio-bp-bar" style="width: 65%;"></div></div>
+              </div>
+
+              <div class="ares-metric-card">
+                <div class="metric-label">MYOCARDIAL PERFUSION</div>
+                <div class="metric-value" style="color:var(--neon-cyan);">99.2%</div>
+                <div class="ares-meter-track" style="margin-top:6px;"><div class="ares-meter-fill" style="width: 99%;"></div></div>
+              </div>
+
+              <div class="ares-log-console" id="cardio-log-console">
+                <p>[00:10:02] Cardiovascular antigravity damper locked at 0.38G.</p>
+                <p>[00:10:06] ECG baseline rhythm stable (Normal Sinus Rhythm).</p>
+                <p>[00:10:12] Oxygen saturation nominal at 98%.</p>
+              </div>
+            </section>
+          </div>
+
+          <!-- Hemodynamics Telemetry Grid -->
+          <div class="telemetry-grid">
+            <div class="metric-card">
+              <div class="metric-label">HEART RATE (AD8232 / MAX30102)</div>
+              <div class="metric-value"><span id="cardio-hr">72</span> BPM</div>
+              <div class="metric-sub">Resting: 62 | Max: 178 BPM</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">ECG ELECTRICAL INTERVALS</div>
+              <div class="metric-value">PR: 148ms | QRS: 88ms</div>
+              <div class="metric-sub">QT Interval: 395ms</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">BLOOD PRESSURE & MAP</div>
+              <div class="metric-value" id="cardio-bp">118/76 mmHg</div>
+              <div class="metric-sub">MAP: <span id="cardio-map">90.0</span> mmHg</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">CARDIAC FUNCTION</div>
+              <div class="metric-value">EF: <span id="cardio-ef">62.5%</span></div>
+              <div class="metric-sub">Output: <span id="cardio-co">5.40</span> L/min | SV: 75mL</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">VASCULAR RESISTANCE</div>
+              <div class="metric-value">1,120 dynes</div>
+              <div class="metric-sub">Arterial Stiffness: 6.8 m/s</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">CAPILLARY REFILL & RECOVERY</div>
+              <div class="metric-value">1.4 sec</div>
+              <div class="metric-sub">Recovery: 28 BPM/min</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 3: RESPIRATORY SYSTEM & PULMONARY MECHANICS (Pulmonary Simulation Visual UI) -->
+      <div id="view-respiratory" class="widget-view">
+        <div class="hud-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">3. RESPIRATORY SYSTEM & PULMONARY MECHANICS // ASTRA MEDVIS</div>
+              <div style="font-size:10px; color:var(--text-secondary); margin-top:3px;">
+                ANATOMICAL AIRFLOW, BRONCHIAL PATHWAYS & RESPIRATORY MOTION
+              </div>
+            </div>
+            <div class="badge" style="color:var(--neon-green);">SIMULATION ONLINE</div>
+          </div>
+
+          <!-- Pulmonary Workspace (from ASTRA_Respiratory_system.zip) -->
+          <div class="pulm-workspace">
+            <!-- Left Rail: Simulation Modes & Layer Toggles -->
+            <aside class="pulm-rail">
+              <div class="eyebrow">SYSTEM / 03</div>
+              <h1 style="font-size:20px; line-height:1.2; margin:10px 0;">PULMONARY<br><em style="color:var(--neon-cyan);">ANALYSIS</em></h1>
+              <p class="intro" style="font-size:11px; color:#88a5b6; line-height:1.6; margin-bottom:14px;">
+                Interactive anatomical visualization of airflow dynamics, bronchial pathways, and oxygen diffusion.
+              </p>
+
+              <div class="section-label" style="font-size:10px; color:var(--neon-cyan); letter-spacing:1.5px; margin-bottom:8px;">
+                SIMULATION MODE
+              </div>
+              <div class="modes">
+                <button class="pulm-mode-btn active" data-mode="airflow"><span>01</span> Airflow dynamics <b>â†—</b></button>
+                <button class="pulm-mode-btn" data-mode="oxygen"><span>02</span> Oxygen diffusion <b>â†—</b></button>
+                <button class="pulm-mode-btn" data-mode="bronchial"><span>03</span> Bronchial mapping <b>â†—</b></button>
+              </div>
+
+              <div class="rule" style="height:1px; background:rgba(0,240,255,0.15); margin:14px 0;"></div>
+
+              <div class="section-label" style="font-size:10px; color:var(--neon-cyan); letter-spacing:1.5px; margin-bottom:8px;">
+                DISPLAY LAYERS
+              </div>
+              <label class="switchline" style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:8px; cursor:pointer;">
+                <span>Flow particles</span>
+                <input id="particlesToggle" type="checkbox" checked>
+              </label>
+              <label class="switchline" style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:8px; cursor:pointer;">
+                <span>Scan grid</span>
+                <input id="gridToggle" type="checkbox" checked>
+              </label>
+              <label class="switchline" style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:8px; cursor:pointer;">
+                <span>Annotations</span>
+                <input id="labelsToggle" type="checkbox" checked>
+              </label>
+
+              <div class="railfooter" style="margin-top:24px; font-size:9px; color:var(--neon-cyan);">
+                <span>â—</span> VISUAL ENGINE READY <small style="display:block; color:var(--text-secondary);">RENDER 60 FPS TARGET</small>
+              </div>
+            </aside>
+
+            <!-- Center Viewport & Dynamic Wave Controls -->
+            <div class="pulm-center">
+              <div class="pulm-viewport-header">
+                <span>FIG. 01 / THORACIC CAVITY</span>
+                <span class="view-id">ANTERIOR VIEW Â· 3D REFERENCE</span>
+              </div>
+              <div class="pulm-viewport" id="viewport-lungs">
+                <div class="scan-grid" id="scanGrid"></div>
+                <div class="image-frame">
+                  <img src="assets/lungs-reference.png" alt="Translucent cyan anatomical lungs and bronchial tree" draggable="false">
+                  <div class="breathing-glow" id="breathingGlow"></div>
+                </div>
+                <canvas id="flowCanvas"></canvas>
+                <div class="reticle r1"></div>
+                <div class="reticle r2"></div>
+                <div class="annotations" id="annotations">
+                  <div class="annotation a1"><span class="pin"></span><div>RIGHT LUNG<small>UPPER / MIDDLE / LOWER LOBE</small></div></div>
+                  <div class="annotation a2"><span class="pin"></span><div>LEFT LUNG<small>SUPERIOR / INFERIOR LOBE</small></div></div>
+                  <div class="annotation a3"><span class="pin"></span><div>TRACHEA<small>PRIMARY AIRWAY</small></div></div>
+                </div>
+                <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+                <div class="pulm-viewport-bottom">
+                  <span><i class="pulse-dot"></i> <span id="modeCaption">AIRFLOW DYNAMICS</span></span>
+                  <span>REFERENCE VISUAL / NOT CLINICAL DATA</span>
+                </div>
+              </div>
+
+              <!-- Controls & SVG Respiratory Wave -->
+              <div class="pulm-controls">
+                <div class="pulm-control-title">
+                  <span>RESPIRATORY CYCLE DYNAMICS</span>
+                  <span id="phaseLabel" style="color:var(--neon-cyan);">INHALATION</span>
+                </div>
+                <div class="pulm-wavebox">
+                  <svg viewBox="0 0 700 56" preserveAspectRatio="none">
+                    <path id="wavePath" d="" />
+                  </svg>
+                  <div class="pulm-wavecursor" id="wavecursor"></div>
+                </div>
+                <div class="pulm-control-bottom">
+                  <button class="primary ares-btn" id="playButton">â…¡ <span>PAUSE SIMULATION</span></button>
+                  <button class="secondary ares-btn" id="resetButton">â†º RESET</button>
+                  <div class="speed" style="flex:1; max-width:220px;">
+                    <label style="display:flex; justify-content:space-between; font-size:10px;">
+                      <span>BREATH RATE</span>
+                      <strong id="speedText" style="color:var(--neon-cyan);">14 BPM</strong>
+                    </label>
+                    <input id="speedRange" type="range" class="ares-slider" min="6" max="30" value="14">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Rail: Live Respiratory Telemetry -->
+            <aside class="pulm-metrics">
+              <div class="eyebrow">LIVE TELEMETRY</div>
+              <h2 style="font-size:14px; letter-spacing:1px; margin:8px 0 14px;">RESPIRATORY TELEMETRY</h2>
+
+              <div class="metric" style="padding:10px 0; border-top:1px solid rgba(0,240,255,0.15);">
+                <div class="metric-label" style="font-size:10px; color:var(--text-secondary); display:flex; justify-content:space-between;">
+                  RESPIRATORY RATE <span>RR</span>
+                </div>
+                <div class="metric-number" style="display:flex; align-items:baseline; gap:6px; margin:6px 0;">
+                  <strong id="rr" style="font-size:26px; color:#e0fbff;">14</strong>
+                  <span style="font-size:10px; color:var(--text-secondary);">breaths/min</span>
+                </div>
+              </div>
+
+              <div class="metric" style="padding:10px 0; border-top:1px solid rgba(0,240,255,0.15);">
+                <div class="metric-label" style="font-size:10px; color:var(--text-secondary); display:flex; justify-content:space-between;">
+                  SIMULATED OXYGEN <span>SpOâ‚‚</span>
+                </div>
+                <div class="metric-number" style="display:flex; align-items:baseline; gap:6px; margin:6px 0;">
+                  <strong id="pulm-spo2" style="font-size:26px; color:var(--neon-green);">98.2</strong>
+                  <span style="font-size:10px; color:var(--text-secondary);">%</span>
+                </div>
+              </div>
+
+              <div class="metric" style="padding:10px 0; border-top:1px solid rgba(0,240,255,0.15);">
+                <div class="metric-label" style="font-size:10px; color:var(--text-secondary); display:flex; justify-content:space-between;">
+                  LUNG VOLUME <span>Vt</span>
+                </div>
+                <div class="metric-number" style="display:flex; align-items:baseline; gap:6px; margin:6px 0;">
+                  <strong id="pulm-volume" style="font-size:26px; color:#e0fbff;">0.52</strong>
+                  <span style="font-size:10px; color:var(--text-secondary);">L</span>
+                </div>
+                <div class="chk-item-track"><div id="volumeBar" class="chk-item-bar" style="width:50%;"></div></div>
+              </div>
+
+              <div class="metric" style="padding:10px 0; border-top:1px solid rgba(0,240,255,0.15);">
+                <div class="metric-label" style="font-size:10px; color:var(--text-secondary); display:flex; justify-content:space-between;">
+                  AIRFLOW VELOCITY <span>FLOW</span>
+                </div>
+                <div class="metric-number" style="display:flex; align-items:baseline; gap:6px; margin:6px 0;">
+                  <strong id="pulm-velocity" style="font-size:26px; color:var(--neon-cyan);">0.35</strong>
+                  <span style="font-size:10px; color:var(--text-secondary);">L/s</span>
+                </div>
+                <div class="chk-item-track"><div id="velocityBar" class="chk-item-bar" style="width:42%; background:var(--neon-blue);"></div></div>
+              </div>
+
+              <div style="margin-top:14px; font-size:10px; color:var(--text-secondary);">
+                <div style="margin-bottom:4px;"><span class="c cyan"></span> Anatomical structure</div>
+                <div style="margin-bottom:4px;"><span class="c white"></span> Particle flow</div>
+                <div><span class="c blue"></span> Diffusion field</div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 4: NEUROLOGICAL AND BRAIN FUNCTION (Project Ares Neural Telemetry HUD UI) -->
+      <div id="view-neuro" class="widget-view">
+        <div class="hud-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">4. NEUROLOGICAL & BRAIN FUNCTION // PROJECT ARES NEURAL TELEMETRY</div>
+              <div style="font-size:10px; color:var(--text-secondary); margin-top:3px;">
+                NEURAL CORTEX SCAN & 8-CHANNEL EEG OSCILLOGRAM // ANTIGRAVITY FIELD INTERFACE
+              </div>
+            </div>
+            <div class="badge" style="color:var(--neon-green);">ADS1299 ACTIVE</div>
+          </div>
+
+          <!-- 3-Column ARES Sci-Fi HUD Layout (from ASTRA_neurological_andbrain.zip) -->
+          <div class="ares-dashboard-grid">
+            <!-- Left Panel: Antigravity Field Module -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>â–²</span> ANTIGRAVITY FIELD MODULE
+              </div>
+
+              <div class="ares-control-group">
+                <label>Quantum Flux Density: <span id="flux-val">84.2</span>%</label>
+                <input type="range" id="flux-slider" class="ares-slider" min="0" max="100" value="84.2" step="0.1">
+              </div>
+
+              <div class="ares-control-group">
+                <label>Gravitational Nullification: <span id="gravity-val">0.38</span> G</label>
+                <input type="range" id="gravity-slider" class="ares-slider" min="0" max="1.0" value="0.38" step="0.01">
+              </div>
+
+              <div class="ares-control-group">
+                <label>Inertial Damper Matrix</label>
+                <button id="stabilizer-toggle" class="ares-btn active">ENGAGED</button>
+              </div>
+
+              <div class="ares-readout-row">
+                <div class="ares-readout-box">
+                  <span class="label">FIELD COHERENCE</span>
+                  <span class="val" id="coherence-val">99.4%</span>
+                </div>
+                <div class="ares-readout-box">
+                  <span class="label">RESONANCE FREQ</span>
+                  <span class="val">142.7 MHz</span>
+                </div>
+              </div>
+
+              <div style="margin-top:auto;">
+                <button id="mayday-btn" class="ares-btn emergency" style="width:100%;">INITIATE EMERGENCY OVERRIDE</button>
+              </div>
+            </section>
+
+            <!-- Center Panel: Brain Scan Image & 8-Channel EEG Waveform Canvas -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>â—‰</span> NEURAL CORTEX & BIOMETRIC FEED
+                <span class="badge" style="margin-left:auto; font-size:9px; color:var(--neon-cyan);">LIVE FEED // CAM_01</span>
+              </div>
+
+              <div class="ares-image-wrapper">
+                <img src="assets/brain_scan.png" alt="Antigravity Neural Scan HUD" id="hud-image-neuro">
+                <div class="grid-overlay"></div>
+                <div class="scanner-line"></div>
+                <div class="target-box" style="position:absolute; top:45%; left:52%; width:40px; height:40px; border:1px dashed var(--neon-cyan); transform:translate(-50%,-50%);"></div>
+              </div>
+
+              <!-- EEG 8-Channel Multi-Wave Canvas -->
+              <div class="ares-waveform-box">
+                <canvas id="eegCanvas" width="600" height="90"></canvas>
+              </div>
+            </section>
+
+            <!-- Right Panel: Astronaut Vital Telemetry & Log Console -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>âŒ</span> ASTRONAUT VITAL TELEMETRY
+              </div>
+
+              <div class="chk-item-card">
+                <div class="chk-item-top">
+                  <span class="chk-item-name">SYS / DIA BLOOD PRESSURE</span>
+                  <span class="chk-item-badge status-nominal">NORMAL</span>
+                </div>
+                <div class="chk-item-body">
+                  <span class="chk-item-val" id="sys-val">118</span> / <span class="chk-item-val" id="dia-val">76</span>
+                  <span class="chk-item-unit">mmHg</span>
+                </div>
+                <div class="chk-item-track"><div class="chk-item-bar" style="width:68%;"></div></div>
+              </div>
+
+              <div class="chk-item-card">
+                <div class="chk-item-top">
+                  <span class="chk-item-name">PULSE / HEART RATE</span>
+                  <span class="chk-item-badge status-nominal">AD8232</span>
+                </div>
+                <div class="chk-item-body">
+                  <span class="chk-item-val" id="pul-val">72</span>
+                  <span class="chk-item-unit">BPM</span>
+                </div>
+                <div class="chk-item-track"><div class="chk-item-bar" style="width:60%;"></div></div>
+              </div>
+
+              <div class="chk-item-card">
+                <div class="chk-item-top">
+                  <span class="chk-item-name">CEREBRAL PERFUSION</span>
+                  <span class="chk-item-badge status-nominal">OPTIMAL</span>
+                </div>
+                <div class="chk-item-body">
+                  <span class="chk-item-val">74.5</span>
+                  <span class="chk-item-unit">mmHg</span>
+                </div>
+                <div class="chk-item-track"><div class="chk-item-bar" style="width:75%;"></div></div>
+              </div>
+
+              <!-- Log Console -->
+              <div class="ares-log-console" id="neuro-log-console">
+                <p>[00:12:44] Antigravity field locked at 0.38G.</p>
+                <p>[00:12:48] Neural feedback stability nominal.</p>
+                <p>[00:13:02] ADS1299 8-Channel EEG synced at 60 FPS.</p>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 5: MENTAL AND PSYCHOLOGICAL HEALTH -->
+      <div id="view-mental" class="widget-view">
+        <div class="hud-panel">
+          <div class="panel-header">
+            <div class="panel-title">5. MENTAL & PSYCHOLOGICAL HEALTH (DEEP SPACE ISOLATION)</div>
+            <div class="badge">SOLITARY STRAIN</div>
+          </div>
+          <div class="telemetry-grid">
+            <div class="metric-card">
+              <div class="metric-label">PERCEIVED STRESS INDEX</div>
+              <div class="metric-value" id="mental-stress">24.5%</div>
+              <div class="metric-sub">Self-Assessment: Low</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">SOLITARY CONFINEMENT STRAIN</div>
+              <div class="metric-value" style="color:var(--neon-purple);" id="mental-isolation">22.4%</div>
+              <div class="metric-sub">Factor: 5.45s Light Delay to Earth</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">MOOD & MOTIVATION</div>
+              <div class="metric-value"><span id="mental-mood">85</span>%</div>
+              <div class="metric-sub">Interest & Engagement: 94.5%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">EMOTIONAL STABILITY</div>
+              <div class="metric-value">91.2%</div>
+              <div class="metric-sub">Irritability Score: 8.5%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">MENTAL RESILIENCE</div>
+              <div class="metric-value">93.5%</div>
+              <div class="metric-sub">Adaptability Index: 92.0%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">DAILY MOOD LOG</div>
+              <div class="metric-value" style="font-size:13px;">High Morale</div>
+              <div class="metric-sub">Ready for EVA Checklist</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 6: SLEEP AND BIOLOGICAL RHYTHMS -->
+      <div id="view-sleep" class="widget-view">
+        <div class="hud-panel">
+          <div class="panel-header">
+            <div class="panel-title">6. SLEEP AND BIOLOGICAL RHYTHMS (OURA/WHOOP PROTOCOL)</div>
+            <div class="badge">SLEEP SCORE 82</div>
+          </div>
+          <div class="sleep-score-box">
+            <div style="font-size:11px; color:#d8b4fe; margin-bottom:4px;">SLEEP INDEX</div>
+            <div class="sleep-score-val" id="sleep-index-score">82</div>
+            <div style="font-size:12px; color:var(--neon-green); margin-top:4px;">Above your norm</div>
+          </div>
+          <div class="telemetry-grid" style="margin-bottom:14px;">
+            <div class="metric-card">
+              <div class="metric-label">TIME IN BED</div>
+              <div class="metric-value" id="sleep-time-bed">7h 10m</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">TOTAL SLEEP</div>
+              <div class="metric-value" id="sleep-total">6h 25m</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">EFFICIENCY</div>
+              <div class="metric-value" id="sleep-eff">90%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">RESTFULNESS</div>
+              <div class="metric-value">Awakenings: 2</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 7: METABOLIC AND ENDOCRINE SYSTEMS (Project Ares Endocrine & Hormonal HUD UI) -->
+      <div id="view-metabolic" class="widget-view">
+        <div class="hud-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">7. METABOLIC AND ENDOCRINE SYSTEMS // PROJECT ARES HORMONAL TELEMETRY</div>
+              <div style="font-size:10px; color:var(--text-secondary); margin-top:3px;">
+                OPTICAL GLANDULAR MAP & RHYTHMIC SECRETION WAVEFORM // HOMEOSTATIC LOOPS
+              </div>
+            </div>
+            <div class="badge" style="color:var(--neon-green);">HOMEOSTASIS ACTIVE</div>
+          </div>
+
+          <!-- 3-Column ARES Sci-Fi HUD Layout (from ASTRA_metabolic_Endocrine_system.zip) -->
+          <div class="ares-dashboard-grid">
+            <!-- Left Panel: Endocrine Regulation Module -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>â–²</span> ENDOCRINE REGULATION MODULE
+              </div>
+
+              <div class="ares-control-group">
+                <label>Target Gland / Axis:</label>
+                <select id="gland-select" class="ares-select">
+                  <option value="pituitary">Pituitary Gland (Master Controller)</option>
+                  <option value="pineal">Pineal Gland (Circadian & Melatonin)</option>
+                  <option value="thyroid">Thyroid Gland (Metabolic Rate)</option>
+                  <option value="adrenal">Adrenal Glands (Cortisol & Epinephrine)</option>
+                  <option value="pancreas">Pancreas (Insulin / Glycemic Control)</option>
+                  <option value="gonads">Gonadal Axis (Testes / Ovaries)</option>
+                </select>
+              </div>
+
+              <div class="ares-control-group">
+                <label>Hormone Secretion Rate: <span id="secretion-val">100.0</span>%</label>
+                <input type="range" id="secretion-slider" class="ares-slider" min="0" max="200" value="100.0" step="0.5">
+              </div>
+
+              <div class="ares-control-group">
+                <label>Circadian Phase Shift: <span id="circadian-val">+0.0</span> hrs</label>
+                <input type="range" id="circadian-slider" class="ares-slider" min="-12" max="12" value="0.0" step="0.5">
+              </div>
+
+              <div class="ares-control-group">
+                <label>Antigravity Endocrine Shield</label>
+                <button id="antigravity-hormone-sync" class="ares-btn active">ACTIVE SYNC</button>
+              </div>
+
+              <div class="ares-readout-row">
+                <div class="ares-readout-box">
+                  <span class="label">METABOLIC INDEX</span>
+                  <span class="val" id="metabolic-val">98.5%</span>
+                </div>
+                <div class="ares-readout-box">
+                  <span class="label">STRESS CORTISOL</span>
+                  <span class="val" id="cortisol-val">14.2 Âµg/dL</span>
+                </div>
+              </div>
+
+              <div style="margin-top:auto;">
+                <button id="endocrine-override-btn" class="ares-btn emergency" style="width:100%;">PURGE ENDOCRINE TOXINS</button>
+              </div>
+            </section>
+
+            <!-- Center Panel: Endocrine System Visual & Target Map -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>â—‰</span> HUMAN ENDOCRINE SYSTEM MAP
+                <span class="badge" id="active-gland-tag" style="margin-left:auto; font-size:9px; color:var(--neon-cyan);">AXIS: PITUITARY</span>
+              </div>
+
+              <div class="ares-image-wrapper">
+                <img src="assets/endocrine_system.png" alt="Human Endocrine System HUD" id="hud-image-endocrine">
+                <div class="grid-overlay"></div>
+                <div class="scanner-line"></div>
+                <!-- Interactive Optical Hotspots for Glands -->
+                <div class="ares-hotspot endocrine-hotspot" data-gland="pineal" style="top:18%; left:52%;" title="Pineal Gland"></div>
+                <div class="ares-hotspot endocrine-hotspot" data-gland="pituitary" style="top:22%; left:51%;" title="Pituitary Gland"></div>
+                <div class="ares-hotspot endocrine-hotspot" data-gland="thyroid" style="top:31%; left:50%;" title="Thyroid Gland"></div>
+                <div class="ares-hotspot endocrine-hotspot" data-gland="adrenal" style="top:52%; left:45%;" title="Adrenal Glands"></div>
+                <div class="ares-hotspot endocrine-hotspot" data-gland="pancreas" style="top:54%; left:52%;" title="Pancreas"></div>
+                <div class="ares-hotspot endocrine-hotspot" data-gland="gonads" style="top:75%; left:50%;" title="Testes / Ovaries"></div>
+              </div>
+
+              <!-- Hormone Secretion Waveform Canvas -->
+              <div class="ares-waveform-box">
+                <canvas id="hormoneCanvas" width="600" height="90"></canvas>
+              </div>
+            </section>
+
+            <!-- Right Panel: Hormonal & Biomarker Telemetry -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>âŒ</span> HORMONE CONCENTRATION TELEMETRY
+              </div>
+
+              <div class="chk-item-card">
+                <div class="chk-item-top">
+                  <span class="chk-item-name">THYROXINE (T4 / T3)</span>
+                  <span class="chk-item-badge status-nominal">NOMINAL</span>
+                </div>
+                <div class="chk-item-body">
+                  <span class="chk-item-val" id="t4-val">8.4</span>
+                  <span class="chk-item-unit">Âµg/dL</span>
+                </div>
+                <div class="chk-item-track"><div class="chk-item-bar" style="width:70%;"></div></div>
+              </div>
+
+              <div class="chk-item-card">
+                <div class="chk-item-top">
+                  <span class="chk-item-name">INSULIN / FASTING GLUCOSE</span>
+                  <span class="chk-item-badge status-nominal">EUMETABOLIC</span>
+                </div>
+                <div class="chk-item-body">
+                  <span class="chk-item-val" id="insulin-val">88</span>
+                  <span class="chk-item-unit">mg/dL</span>
+                </div>
+                <div class="chk-item-track"><div class="chk-item-bar" style="width:65%;"></div></div>
+              </div>
+
+              <div class="chk-item-card">
+                <div class="chk-item-top">
+                  <span class="chk-item-name">MELATONIN / CIRCADIAN</span>
+                  <span class="chk-item-badge status-nominal">SYNCED</span>
+                </div>
+                <div class="chk-item-body">
+                  <span class="chk-item-val" id="melatonin-val">44.0</span>
+                  <span class="chk-item-unit">pg/mL</span>
+                </div>
+                <div class="chk-item-track"><div class="chk-item-bar" style="width:58%;"></div></div>
+              </div>
+
+              <!-- Log Console -->
+              <div class="ares-log-console" id="endocrine-log-console">
+                <p>[00:15:10] Endocrine telemetry synced. Homeostasis locked.</p>
+                <p>[00:15:15] Circadian melatonin synthesis nominal.</p>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 8: DIGESTIVE, NUTRITIONAL AND HYDRATION (Project Ares Digestive Processes HUD UI) -->
+      <div id="view-digestive" class="widget-view">
+        <div class="hud-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">8. DIGESTIVE, NUTRITIONAL & HYDRATION SYSTEMS // PROJECT ARES HUD</div>
+              <div style="font-size:10px; color:var(--text-secondary); margin-top:3px;">
+                VISCERAL PERISTALSIS WAVEFORM & NUTRIENT ABSORPTION TELEMETRY
+              </div>
+            </div>
+            <div class="badge" style="color:var(--neon-green);">GASTRIC ABSORPTION OPTIMAL</div>
+          </div>
+
+          <!-- 3-Column ARES Sci-Fi HUD Layout (from ASTRA_Digestive_UI.zip) -->
+          <div class="ares-dashboard-grid">
+            <!-- Left Panel: Digestive Metabolism Module -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>â–²</span> DIGESTIVE METABOLISM MODULE
+              </div>
+
+              <div class="ares-control-group">
+                <label>Nutrient Absorption Rate: <span id="absorption-val">72.0</span>%</label>
+                <input type="range" id="absorption-slider" class="ares-slider" min="0" max="100" value="72.0" step="0.5">
+              </div>
+
+              <div class="ares-control-group">
+                <label>Enzyme Activity Level: <span id="enzyme-val">83.0</span>%</label>
+                <input type="range" id="enzyme-slider" class="ares-slider" min="0" max="100" value="83.0" step="0.5">
+              </div>
+
+              <div class="ares-control-group">
+                <label>Peristalsis Wave Frequency: <span id="peristalsis-val">1.2</span> Hz</label>
+                <input type="range" id="peristalsis-slider" class="ares-slider" min="0.1" max="5.0" value="1.2" step="0.1">
+              </div>
+
+              <div class="ares-control-group">
+                <label>Antigravity Visceral Damper</label>
+                <button id="antigravity-digestion-sync" class="ares-btn active">ENGAGED</button>
+              </div>
+
+              <div class="ares-readout-row">
+                <div class="ares-readout-box">
+                  <span class="label">GASTRIC PH</span>
+                  <span class="val" id="ph-val">1.8 pH</span>
+                </div>
+                <div class="ares-readout-box">
+                  <span class="label">PARTICLE FLUX</span>
+                  <span class="val" id="flux-val">142 p/s</span>
+                </div>
+              </div>
+
+              <div style="margin-top:auto;">
+                <button id="digestive-override-btn" class="ares-btn emergency" style="width:100%;">PURGE GASTROINTESTINAL TOXINS</button>
+              </div>
+            </section>
+
+            <!-- Center Panel: Digestive System Visual & Target Map -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>â—‰</span> DIGESTIVE PROCESSES // BIOMETRIC FEED
+                <span class="badge" style="margin-left:auto; font-size:9px; color:var(--neon-cyan);">CAM_03 // ACTIVE</span>
+              </div>
+
+              <div class="ares-image-wrapper">
+                <img src="assets/digestive_hud.png" alt="Digestive Processes Antigravity HUD" id="hud-image-digestive">
+                <div class="grid-overlay"></div>
+                <div class="scanner-line"></div>
+                <div class="target-box" style="top: 80%; left: 50%;"></div>
+                <!-- Interactive Optical Hotspots -->
+                <div class="ares-hotspot digestive-hotspot" data-process="stomach" style="top:32%; left:48%;" title="Gastric Processing"></div>
+                <div class="ares-hotspot digestive-hotspot" data-process="intestine" style="top:54%; left:48%;" title="Nutrient Absorption"></div>
+                <div class="ares-hotspot digestive-hotspot" data-process="particles" style="top:80%; left:50%;" title="Cellular Particle Transport"></div>
+              </div>
+
+              <!-- Peristalsis Waveform Canvas -->
+              <div class="ares-waveform-box">
+                <canvas id="peristalsisCanvas" width="600" height="90"></canvas>
+              </div>
+            </section>
+
+            <!-- Right Panel: Gastrointestinal Telemetry -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>âŒ</span> GASTROINTESTINAL TELEMETRY
+              </div>
+
+              <div class="chk-item-card">
+                <div class="chk-item-top">
+                  <span class="chk-item-name">NUTRIENT ABSORPTION EFFICIENCY</span>
+                  <span class="chk-item-badge status-nominal">OPTIMAL</span>
+                </div>
+                <div class="chk-item-body">
+                  <span class="chk-item-val" id="v-absorption">72.4%</span>
+                </div>
+                <div class="chk-item-track"><div class="chk-item-bar" style="width:72%;"></div></div>
+              </div>
+
+              <div class="chk-item-card">
+                <div class="chk-item-top">
+                  <span class="chk-item-name">ENZYME CATALYTIC ACTIVITY</span>
+                  <span class="chk-item-badge status-nominal">HIGH</span>
+                </div>
+                <div class="chk-item-body">
+                  <span class="chk-item-val" id="v-enzyme">83.1%</span>
+                </div>
+                <div class="chk-item-track"><div class="chk-item-bar" style="width:83%;"></div></div>
+              </div>
+
+              <div class="chk-item-card">
+                <div class="chk-item-top">
+                  <span class="chk-item-name">FLUID INTAKE & HYDRATION</span>
+                  <span class="chk-item-badge status-nominal">EUHYDRATED</span>
+                </div>
+                <div class="chk-item-body">
+                  <span class="chk-item-val" id="dig-water">2,600</span>
+                  <span class="chk-item-unit">mL</span>
+                </div>
+                <div class="chk-item-track"><div class="chk-item-bar" style="width:88%;"></div></div>
+              </div>
+
+              <!-- Log Console -->
+              <div class="ares-log-console" id="digestive-log-console">
+                <p>[00:16:30] Gastric pH monitored at 1.8 (Normative).</p>
+                <p>[00:16:35] Nutrient absorption villi transport nominal.</p>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 9: IMMUNE, CELLULAR AND GENETIC HEALTH (Simulated DNA Video & Genomics HUD) -->
+      <div id="view-immune" class="widget-view">
+        <div class="hud-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">9. IMMUNE, CELLULAR & GENETIC HEALTH // PROJECT ARES GENOMICS</div>
+              <div style="font-size:10px; color:var(--text-secondary); margin-top:3px;">
+                HOLOGRAPHIC DNA DOUBLE HELIX & CELLULAR REPAIR DYNAMICS // CYBERPUNK BIOPROCESS MONITOR
+              </div>
+            </div>
+            <div class="badge" style="color:var(--neon-green);">GENOMICS & T-CELLS ACTIVE</div>
+          </div>
+
+          <!-- 3-Column ARES Sci-Fi HUD Layout with Simulated Video Animation -->
+          <div class="ares-dashboard-grid" style="margin-bottom:16px;">
+            <!-- Left Panel: Genomic Controls -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>▲</span> CELLULAR & GENOMIC CONTROLS
+              </div>
+
+              <div class="ares-control-group">
+                <label>T-Cell Proliferation: <span id="immune-tcell-val">920</span> /µL</label>
+                <input type="range" id="immune-tcell-slider" class="ares-slider" min="400" max="1500" value="920" step="10">
+              </div>
+
+              <div class="ares-control-group">
+                <label>DNA Repair Efficiency: <span id="immune-repair-val">94.8</span>%</label>
+                <input type="range" id="immune-repair-slider" class="ares-slider" min="50" max="100" value="94.8" step="0.5">
+              </div>
+
+              <div class="ares-control-group">
+                <label>Radiation Damage Mitigation: <span id="immune-rad-val">1.4</span> γ-H2AX</label>
+                <input type="range" id="immune-rad-slider" class="ares-slider" min="0.1" max="5.0" value="1.4" step="0.1">
+              </div>
+
+              <div class="ares-control-group">
+                <label>Radioprotective Cellular Damper</label>
+                <button id="immune-damper-toggle" class="ares-btn active">ENGAGED</button>
+              </div>
+
+              <div class="ares-readout-row">
+                <div class="ares-readout-box">
+                  <span class="label">TELOMERE LENGTH</span>
+                  <span class="val" id="immune-telomere-val">8.4 kb</span>
+                </div>
+                <div class="ares-readout-box">
+                  <span class="label">PATHOGEN STATUS</span>
+                  <span class="val" style="color:var(--neon-green);">STERILE</span>
+                </div>
+              </div>
+
+              <div style="margin-top:auto;">
+                <button id="immune-override-btn" class="ares-btn emergency" style="width:100%;">INFUSE IMMUNOSTIMULANT COCKTAIL</button>
+              </div>
+            </section>
+
+            <!-- Center Panel: Simulated Video Hologram Feed & DNA Waveform -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>◉</span> CELLULAR & GENETIC SIMULATION FEED
+                <span class="badge" style="margin-left:auto; font-size:9px; color:var(--neon-cyan);">LIVE SIM // VIDEO_09</span>
+              </div>
+
+              <!-- Animated Simulated Video Wrapper -->
+              <div class="ares-image-wrapper">
+                <video id="immune-sim-video" class="ares-hud-video" autoplay loop muted playsinline poster="assets/immune_dna_hud.jpg">
+                  <source src="assets/immune_simulation.mp4" type="video/mp4">
+                  <img src="assets/immune_dna_hud.jpg" alt="Immune DNA HUD" />
+                </video>
+                <div class="grid-overlay"></div>
+                <div class="scanner-line"></div>
+                <div class="target-box" style="top: 50%; left: 50%;"></div>
+                <div class="ares-hotspot" style="top: 48%; left: 24%;" title="Deoxyribonucleic acid helix"></div>
+                <div class="ares-hotspot" style="top: 48%; left: 74%;" title="Telomeric end repeat"></div>
+              </div>
+
+              <!-- Cellular & Genetic Repair Pulse Canvas -->
+              <div class="ares-waveform-box">
+                <canvas id="immuneCanvas" width="600" height="90"></canvas>
+              </div>
+            </section>
+
+            <!-- Right Panel: Real-Time Genomic Vitals & Logs -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>◈</span> REAL-TIME GENOMIC VITALS
+              </div>
+
+              <div class="ares-metric-card">
+                <div class="metric-label">T-CELL COUNT (CD4/CD8)</div>
+                <div class="metric-value" id="v-immune-tcells" style="color:var(--neon-cyan);">920 <small style="font-size:12px;">/µL</small></div>
+                <div class="metric-sub">CD4: 580 /µL | CD8: 340 /µL</div>
+                <div class="ares-meter-track" style="margin-top:6px;"><div class="ares-meter-fill" id="bar-immune-tcells" style="width: 76%;"></div></div>
+              </div>
+
+              <div class="ares-metric-card">
+                <div class="metric-label">DNA DAMAGE & REPAIR</div>
+                <div class="metric-value" id="v-immune-repair" style="color:var(--neon-green);">94.8%</div>
+                <div class="metric-sub">γ-H2AX Markers: <span id="v-immune-dmg">1.4</span> (Low)</div>
+                <div class="ares-meter-track" style="margin-top:6px;"><div class="ares-meter-fill" id="bar-immune-repair" style="width: 95%;"></div></div>
+              </div>
+
+              <div class="ares-metric-card">
+                <div class="metric-label">INFLAMMATION (CRP & IL-6)</div>
+                <div class="metric-value" style="color:var(--neon-cyan);">CRP: 0.6 mg/L</div>
+                <div class="metric-sub">ESR: 4.0 mm/h | IL-6: 1.8 pg/mL</div>
+              </div>
+
+              <div class="ares-metric-card">
+                <div class="metric-label">PATHOGEN TEST RESULTS</div>
+                <div class="metric-value" style="font-size:13px; color:var(--neon-green);">Clean Negative</div>
+                <div class="metric-sub">Microbial Assays: Sterile</div>
+              </div>
+
+              <div class="ares-log-console" id="immune-log-console">
+                <p>[00:10:02] Radioprotective cellular damper locked at 0.38G.</p>
+                <p>[00:10:07] DNA repair sequence active: double-strand breaks 1.4/cell.</p>
+                <p>[00:10:14] CD4/CD8 helper ratio nominal at 1.7.</p>
+              </div>
+            </section>
+          </div>
+
+          <!-- Extended Genomic Telemetry Cards -->
+          <div class="telemetry-grid">
+            <div class="metric-card">
+              <div class="metric-label">T-CELL COUNT (CD4 / CD8)</div>
+              <div class="metric-value" id="imm-tcells">920 /µL</div>
+              <div class="metric-sub">CD8: 540 /µL | CD4/CD8: 1.7</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">DNA DAMAGE & REPAIR</div>
+              <div class="metric-value" id="imm-repair">94.8%</div>
+              <div class="metric-sub">γ-H2AX Markers: <span id="imm-dna-dmg">1.4</span></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">INFLAMMATION (CRP & ESR)</div>
+              <div class="metric-value">CRP: 0.6 mg/L</div>
+              <div class="metric-sub">ESR: 4.0 mm/h | IL-6: 1.8 pg/mL</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">IMMUNOGLOBULINS</div>
+              <div class="metric-value">IgG: 1,120 mg/dL</div>
+              <div class="metric-sub">IgM: 135 | IgA: 210</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">PATHOGEN TEST RESULTS</div>
+              <div class="metric-value" style="font-size:13px; color:var(--neon-green);">Clean Negative</div>
+              <div class="metric-sub">Microbial Assays: Sterile</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">COAGULATION & CLOTTING</div>
+              <div class="metric-value">INR: 1.02</div>
+              <div class="metric-sub">PT: 11.8s | aPTT: 29.5s</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 10: SENSORY AND MUSCULOSKELETAL SYSTEMS -->
+      <div id="view-sensory" class="widget-view">
+        <div class="hud-panel">
+          <div class="panel-header">
+            <div class="panel-title">10. SENSORY AND MUSCULOSKELETAL SYSTEMS</div>
+            <div class="badge">SANS & VESTIBULAR</div>
+          </div>
+          <div class="telemetry-grid">
+            <div class="metric-card">
+              <div class="metric-label">VISUAL ACUITY & SANS CHECK</div>
+              <div class="metric-value">20/20 Snellen</div>
+              <div class="metric-sub">Intraocular Pressure: <span id="sens-iop">14.5</span> mmHg</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">AUDITORY SENSITIVITY</div>
+              <div class="metric-value">12.0 dB</div>
+              <div class="metric-sub">Response Latency: 155 ms</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">VESTIBULAR & BALANCE</div>
+              <div class="metric-value">93.0%</div>
+              <div class="metric-sub">Postural Stability: 92.5%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">MUSCLE STRENGTH & TONE</div>
+              <div class="metric-value">460 Newtons</div>
+              <div class="metric-sub">Endurance Hold: 145 sec</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">BONE DENSITY (DEXA)</div>
+              <div class="metric-value">Z-Score: -0.3</div>
+              <div class="metric-sub">Trabecular Index: 1.38</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">DEEP TENDON REFLEXES</div>
+              <div class="metric-value">2+ Normal</div>
+              <div class="metric-sub">Protective Latency: 180 ms</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 11: EARTH ATMOSPHERE AND ENVIRONMENTAL CONDITIONS -->
+      <div id="view-environment" class="widget-view">
+        <div class="hud-panel">
+          <div class="panel-header">
+            <div class="panel-title">11. EARTH ATMOSPHERE & ENVIRONMENTAL CONDITIONS</div>
+            <div class="badge">HABITAT LIFE CONTROL</div>
+          </div>
+          <div class="telemetry-grid" style="margin-bottom:14px;">
+            <div class="metric-card">
+              <div class="metric-label">TEMPERATURE</div>
+              <div class="metric-value" id="env-temp">22.5Â°C</div>
+              <span class="status-badge green">NORMAL</span>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">HUMIDITY</div>
+              <div class="metric-value" id="env-humidity">48%</div>
+              <span class="status-badge green">NORMAL</span>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">COâ‚‚ LEVELS (MH-Z19B)</div>
+              <div class="metric-value" id="env-co2">540 PPM</div>
+              <span class="status-badge green">NORMAL</span>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">GEIGER BACKGROUND RADIATION</div>
+              <div class="metric-value" id="env-radiation">22.4 ÂµSv/h</div>
+              <span class="status-badge green">STABLE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 12: EXTERNAL SURVIVAL RESOURCES AND SAFETY -->
+      <div id="view-survival" class="widget-view">
+        <div class="hud-panel">
+          <div class="panel-header">
+            <div class="panel-title">12. EXTERNAL SURVIVAL RESOURCES & SAFETY (EVA EMU)</div>
+            <div class="badge" style="color:var(--neon-green);">HERMETIC SEAL OK</div>
+          </div>
+          <div class="telemetry-grid">
+            <div class="metric-card">
+              <div class="metric-label">SUIT PRESSURE (BMP280)</div>
+              <div class="metric-value" id="surv-psi">4.30 psi</div>
+              <div class="metric-sub">Leakage Rate: 0.00 psi/min</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">PRIMARY Oâ‚‚ RESERVE</div>
+              <div class="metric-value" id="surv-o2">5.9 kg</div>
+              <div class="metric-sub">Remaining Duration: ~7.3 hrs</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Oâ‚‚ HIGH PRESSURE TANK</div>
+              <div class="metric-value">198.5 bar</div>
+              <div class="metric-sub">Reserve: 84.5 kg Oâ‚‚</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">WATER RECYCLING & SCRUBBER</div>
+              <div class="metric-value">340 L (94.8%)</div>
+              <div class="metric-sub">Scrubber: 98.4% Efficiency</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">SUIT BATTERY & POWER</div>
+              <div class="metric-value">89% (18.5 hrs)</div>
+              <div class="metric-sub">Solar Temp Ext: 121Â°C</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">SAFETY CHECKLIST</div>
+              <div class="metric-value" style="font-size:13px; color:var(--neon-green);">Tether Engaged</div>
+              <div class="metric-sub">Umbilical Impedance OK</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: DEDICATED ASTRONAUT COMPLETE SPACE SUIT MONITORING SYSTEM -->
+      <div id="view-suit" class="widget-view">
+        <div class="hud-panel">
+          <!-- Suit Master Header -->
+          <div class="suit-master-header">
+            <div>
+              <div class="panel-title" style="font-size:16px;">
+                ASTRONAUT COMPLETE SPACE SUIT MONITORING SYSTEM // EMU & ECLSS ARCHITECTURE
+              </div>
+              <div style="font-size:10px; color:var(--text-secondary); margin-top:3px;">
+                12 ANATOMICAL ARCHITECTURE ZONES // 11 REAL-TIME RESPONSIVE PARAMETER CHECKLISTS (188 TELEMETRY NODES)
+              </div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <span class="badge" style="color:var(--neon-green); font-size:11px;">SUIT SEAL: 100% HERMETIC</span>
+              <span class="badge" style="color:var(--neon-cyan); font-size:11px;">GRAV-NULL: 0.38G</span>
+            </div>
+          </div>
+
+          <!-- Quick EVA Suit Subsystems Bar -->
+          <div class="telemetry-grid" style="margin-bottom:16px;">
+            <div class="metric-card">
+              <div class="metric-label">SUIT INTERNAL PRESSURE</div>
+              <div class="metric-value" style="color:var(--neon-green);">4.30 <small style="font-size:11px;">psi</small></div>
+              <div class="metric-sub">Stability: Â±0.005 psi/min</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">PRIMARY Oâ‚‚ SUPPLY (PLSS)</div>
+              <div class="metric-value">5.88 <small style="font-size:11px;">kg (96%)</small></div>
+              <div class="metric-sub">Tank Pressure: 204.5 bar</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">LCVG COOLING WATER LOOP</div>
+              <div class="metric-value" style="color:var(--neon-cyan);">18.2 <small style="font-size:11px;">Â°C</small></div>
+              <div class="metric-sub">Flow: 1.82 L/min | Loop Active</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">PLSS BATTERY & RUNTIME</div>
+              <div class="metric-value">89.4% <small style="font-size:11px;">(7h 48m)</small></div>
+              <div class="metric-sub">Bus: 29.2 V | 112.4 W</div>
+            </div>
+          </div>
+
+          <!-- Section 1: Astronaut Suit Anatomical Architecture (12 Zones) -->
+          <div style="font-size:11px; color:var(--neon-cyan); letter-spacing:1px; margin-bottom:8px;">
+            PART 1: ASTRONAUT SUIT ANATOMICAL ARCHITECTURE (ASTRA 12-ZONE MONITORING MAP):
+          </div>
+
+          <div class="suit-anatomical-section">
+            <!-- EMU Space Suit Schematic Hologram with Interactive Anatomical Targeting Reticles (No Numerical Circles) -->
+            <div class="suit-schematic-box">
+              <img src="assets/emu_suit.png" alt="Extravehicular Mobility Unit EMU Space Suit Schematic" id="hud-image-suit">
+              <div class="grid-overlay"></div>
+              <div class="scanner-line"></div>
+              <!-- 12 Anatomical Reticle Targeting Zones -->
+              <div id="suit-hotspots-container"></div>
+            </div>
+
+            <!-- Right Column: Complete Subsystem Details Station -->
+            <div class="suit-detail-station" id="suit-detail-station">
+              <!-- Quick Zone Selector Strip (12 interactive pill tabs) -->
+              <div class="suit-zone-selector-strip" id="suit-zone-selector-pills"></div>
+
+              <!-- Zone Complete Detail Card Container -->
+              <div class="suit-zone-detail-panel" id="suit-zone-detail-card">
+                <!-- Dynamically populated by spaceSuitHud.renderZoneCompleteDetails(zone) -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Interactive Suit Controls & Pulse Waveform -->
+          <div style="font-size:11px; color:var(--neon-cyan); letter-spacing:1px; margin-bottom:8px;">
+            PART 2: EMU TELEMETRY PULSE & EXTRAVEHICULAR SUBSYSTEM CONTROLS:
+          </div>
+
+          <div class="ares-dashboard-grid" style="margin-bottom:16px;">
+            <!-- Left: Interactive Controls -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>âš¡</span> SPACESUIT INTEGRITY CONTROLS
+              </div>
+
+              <div class="ares-control-group">
+                <label>Suit Internal Pressure: <span id="suit-pressure-val">4.30 PSI</span></label>
+                <input type="range" id="suit-pressure-slider" class="ares-slider" min="2.0" max="6.0" value="4.30" step="0.05">
+              </div>
+
+              <div class="ares-control-group">
+                <label>Antigravity Field Density: <span id="suit-flux-val">84.2%</span></label>
+                <input type="range" id="suit-flux-slider" class="ares-slider" min="0" max="100" value="84.2" step="0.5">
+              </div>
+
+              <div class="ares-control-group">
+                <label>Inertial Servo-Stabilizer</label>
+                <button id="suit-servo-toggle" class="ares-btn active">ENGAGED</button>
+              </div>
+
+              <button id="suit-override-btn" class="ares-btn emergency" style="width:100%; margin-top:auto;">
+                EMERGENCY DEPRESSURIZATION PURGE
+              </button>
+            </section>
+
+            <!-- Center: Waveform Canvas -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>âŒ</span> EMU ECLSS TELEMETRY PULSE (60 FPS)
+              </div>
+              <div class="ares-waveform-box" style="height:120px;">
+                <canvas id="emuCanvas" width="600" height="120"></canvas>
+              </div>
+              <div style="font-size:10px; color:var(--text-secondary); display:flex; justify-content:space-between;">
+                <span>ECLSS LOOP: ACTIVE</span>
+                <span>DATA RATE: 10 HZ BURST</span>
+              </div>
+            </section>
+
+            <!-- Right: Event Log -->
+            <section class="ares-panel">
+              <div class="ares-panel-title">
+                <span>ðŸ“‹</span> SPACESUIT MISSION EVENT LOG
+              </div>
+              <div class="ares-log-console" id="suit-log-console" style="height:120px;">
+                <p>[00:18:01] EMU telemetry online. Suit pressure nominal (4.30 PSI).</p>
+                <p>[00:18:05] Antigravity stabilizing field locked at 0.38G.</p>
+                <p>[00:18:10] PLSS coolant loop functioning at 100%.</p>
+                <p>[00:18:15] All 12 anatomical architecture zones hermetically sealed.</p>
+              </div>
+            </section>
+          </div>
+
+          <!-- Section 3: Master Space Suit Parameter Checklists (Real-Time Responsive) -->
+          <div style="font-size:11px; color:var(--neon-cyan); letter-spacing:1px; margin-bottom:8px;">
+            PART 3: SPACE SUIT PARAMETER CHECKLISTS (REAL-TIME RESPONSIVE // ALL 11 CATEGORIES):
+          </div>
+
+          <!-- Filter & Search Bar -->
+          <div class="suit-checklist-filter-bar">
+            <div class="suit-filter-top-row">
+              <input type="text" id="suit-checklist-search" class="suit-search-input" placeholder="ðŸ” Search any suit parameter (e.g. Visor, O2, Bearing, Leak, Pump)...">
+              <span id="suit-checklist-count-label" style="font-size:10px; color:var(--neon-cyan); letter-spacing:1px;">
+                DISPLAYING 188 OF 188 SPACE SUIT PARAMETERS
+              </span>
+            </div>
+
+            <!-- Category Filter Pills -->
+            <div class="suit-cat-pills">
+              <button class="cat-pill-btn active" data-cat="all">ALL (188)</button>
+              <button class="cat-pill-btn" data-cat="head">HEAD & HELMET (19)</button>
+              <button class="cat-pill-btn" data-cat="torso">NECK & TORSO (16)</button>
+              <button class="cat-pill-btn" data-cat="backpack">BACKPACK & PLSS (25)</button>
+              <button class="cat-pill-btn" data-cat="arms">ARMS & ELBOWS (15)</button>
+              <button class="cat-pill-btn" data-cat="hands">GLOVES & HANDS (14)</button>
+              <button class="cat-pill-btn" data-cat="waist">WAIST & PELVIS (12)</button>
+              <button class="cat-pill-btn" data-cat="legs">LEGS & KNEES (15)</button>
+              <button class="cat-pill-btn" data-cat="boots">FEET & BOOTS (13)</button>
+              <button class="cat-pill-btn" data-cat="garment">FULL-BODY GARMENT (16)</button>
+              <button class="cat-pill-btn" data-cat="biometrics">BIOMETRICS (17)</button>
+              <button class="cat-pill-btn" data-cat="comms">COMMS & EMERGENCIES (16)</button>
+            </div>
+          </div>
+
+          <!-- Checklists Content Container (Dynamically rendered by suit_hud.js) -->
+          <div id="suit-checklists-container"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="static/js/human_body_hud.js"></script>
+  <script src="static/js/heart_canvas.js"></script>
+  <script src="static/js/pulmonary_sim.js"></script>
+  <script src="static/js/neuro_hud.js"></script>
+  <script src="static/js/cardio_hud.js"></script>
+  <script src="static/js/endocrine_hud.js"></script>
+  <script src="static/js/digestive_hud.js"></script>
+  <script src="static/js/immune_hud.js"></script>
+  <script src="static/js/suit_hud.js"></script>
+  <script src="static/js/cardio_sim.js"></script>
+  <script src="static/js/ecg_chart.js"></script>
+  <script src="static/js/app.js"></script>
+</body>
+
+</html>
+

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMU Antigravity & Space Suit Telemetry HUD - NASA Simulation</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div class="hud-container">
+        <!-- Header -->
+        <header class="hud-header">
+            <div class="logo-area">
+                <span class="pulse-dot"></span>
+                <h1>PROJECT ARES // EXTRAVEHICULAR MOBILITY UNIT (EMU) & ANTIGRAVITY HUD</h1>
+            </div>
+            <div class="mission-status">
+                <span>SUIT STATUS: <strong class="warning">SEALED & STABLE</strong></span>
+                <span>GRAV-NULL: <strong class="accent">0.38G</strong></span>
+                <span id="utc-clock">00:00:00 UTC</span>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <main class="dashboard-grid">
+            <!-- Left Panel: Suit Component Selector & Integrity Controls -->
+            <section class="panel control-panel">
+                <h2>EMU SUBSYSTEM MODULE</h2>
+                <div class="control-group">
+                    <label for="component-select">Select Suit Component:</label>
+                    <select id="component-select" class="sci-select">
+                        <option value="emu">Extravehicular Mobility Unit (Full Assembly)</option>
+                        <option value="plss">Primary Life Support System (PLSS)</option>
+                        <option value="helmet">Helmet with Camera & Lights</option>
+                        <option value="torso">Hard Upper Torso (Interior/Exterior)</option>
+                        <option value="cooling">Liquid Cooling & Ventilation Garment (LCVG)</option>
+                        <option value="dcm">Display and Control Module (DCM)</option>
+                        <option value="sop">Secondary Oxygen Pack & Arm/Glove/Boot</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="pressure-slider">Suit Internal Pressure: <span id="pressure-val">4.3</span> PSI</label>
+                    <input type="range" id="pressure-slider" min="2.0" max="8.0" value="4.3" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label for="antigravity-flux-slider">Antigravity Field Density: <span id="flux-val">84.2</span>%</label>
+                    <input type="range" id="antigravity-flux-slider" min="0" max="100" value="84.2" step="0.5">
+                </div>
+                <div class="control-group">
+                    <label for="servo-toggle">Inertial Servo-Stabilizer</label>
+                    <button id="servo-toggle" class="btn active">ENGAGED</button>
+                </div>
+                <div class="telemetry-readouts">
+                    <div class="readout-box">
+                        <span class="label">SUIT INTEGRITY</span>
+                        <span class="value" id="integrity-val">99.8%</span>
+                    </div>
+                    <div class="readout-box">
+                        <span class="label">OXYGEN RESERVE</span>
+                        <span class="value" id="oxygen-val">7.8 HRS</span>
+                    </div>
+                </div>
+                <div class="emergency-box">
+                    <button id="override-btn" class="btn emergency">EMERGENCY SUIT DEPRESSURIZATION PURGE</button>
+                </div>
+            </section>
+
+            <!-- Center Panel: EMU Hologram Visual & Interactive Hotspots -->
+            <section class="panel visual-panel">
+                <div class="panel-header">
+                    <h2>EMU SCHEMATIC // HOLOGRAM FEED</h2>
+                    <span class="live-tag" id="active-tag">SYSTEM: EMU FULL</span>
+                </div>
+                <div class="image-wrapper">
+                    <img src="assets/emu_suit.png" alt="Extravehicular Mobility Unit HUD" id="hud-image">
+                    <div class="grid-overlay"></div>
+                    <div class="scanner-line"></div>
+                    <!-- Interactive Hotspots over components -->
+                    <div class="hotspot" data-part="plss" style="top: 25%; left: 85%;" title="Primary Life Support System"></div>
+                    <div class="hotspot" data-part="helmet" style="top: 28%; left: 32%;" title="Helmet Assembly"></div>
+                    <div class="hotspot" data-part="torso" style="top: 38%; left: 63%;" title="Hard Upper Torso"></div>
+                    <div class="hotspot" data-part="emu" style="top: 55%; left: 50%;" title="Full EMU Suit"></div>
+                    <div class="hotspot" data-part="cooling" style="top: 32%; left: 15%;" title="Liquid Cooling Garment"></div>
+                    <div class="hotspot" data-part="dcm" style="top: 70%; left: 72%;" title="Display & Control Module"></div>
+                </div>
+                <div class="waveform-container">
+                    <canvas id="emuCanvas" width="600" height="80"></canvas>
+                </div>
+            </section>
+
+            <!-- Right Panel: Life Support & Suit Telemetry -->
+            <section class="panel vitals-panel">
+                <h2>LIFE SUPPORT & TELEMETRY</h2>
+                <div class="vital-card">
+                    <span class="v-label">OXYGEN PARTIAL PRESSURE (pO2)</span>
+                    <span class="v-value" id="po2-val">3.1</span> <small>psi</small>
+                    <div class="v-bar"><div class="v-fill" style="width: 78%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">BATTERY CAPACITY (PLSS)</span>
+                    <span class="v-value" id="battery-val">94.5</span> <small>%</small>
+                    <div class="v-bar"><div class="v-fill" style="width: 95%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">WATER SUBLIMATOR TEMP</span>
+                    <span class="v-value" id="temp-val">42.1</span> <small>°C</small>
+                    <div class="v-bar"><div class="v-fill warning-fill" style="width: 65%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">MICROGRAVITY STABILIZATION</span>
+                    <span class="v-value">0.38</span> <small>G-NULL</small>
+                    <div class="v-bar"><div class="v-fill" style="width: 38%;"></div></div>
+                </div>
+                <div class="log-console" id="log-console">
+                    <p>[00:18:01] EMU telemetry online. Suit pressure nominal.</p>
+                    <p>[00:18:05] Antigravity stabilizing field locked.</p>
+                    <p>[00:18:10] PLSS coolant loops functioning at 100%.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

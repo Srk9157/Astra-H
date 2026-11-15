@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Endocrine System & Antigravity Metabolic HUD</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div class="hud-container">
+        <!-- Header -->
+        <header class="hud-header">
+            <div class="logo-area">
+                <span class="pulse-dot"></span>
+                <h1>PROJECT ARES // ENDOCRINE & HORMONAL TELEMETRY</h1>
+            </div>
+            <div class="mission-status">
+                <span>METABOLIC STATUS: <strong class="warning">HOMEOSTASIS</strong></span>
+                <span>GRAV-NULL: <strong class="accent">0.38G</strong></span>
+                <span id="utc-clock">00:00:00 UTC</span>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <main class="dashboard-grid">
+            <!-- Left Panel: Gland Selector & Hormone Regulation -->
+            <section class="panel control-panel">
+                <h2>ENDOCRINE REGULATION MODULE</h2>
+                <div class="control-group">
+                    <label for="gland-select">Target Gland / Axis:</label>
+                    <select id="gland-select" class="sci-select">
+                        <option value="pituitary">Pituitary Gland (Master Controller)</option>
+                        <option value="pineal">Pineal Gland (Circadian & Melatonin)</option>
+                        <option value="thyroid">Thyroid Gland (Metabolic Rate)</option>
+                        <option value="adrenal">Adrenal Glands (Cortisol & Epinephrine)</option>
+                        <option value="pancreas">Pancreas (Insulin / Glycemic Control)</option>
+                        <option value="gonads">Gonadal Axis (Testes / Ovaries)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="secretion-slider">Hormone Secretion Rate: <span id="secretion-val">100.0</span>%</label>
+                    <input type="range" id="secretion-slider" min="0" max="200" value="100.0" step="0.5">
+                </div>
+                <div class="control-group">
+                    <label for="circadian-slider">Circadian Phase Shift: <span id="circadian-val">+0.0</span> hrs</label>
+                    <input type="range" id="circadian-slider" min="-12" max="12" value="0.0" step="0.5">
+                </div>
+                <div class="control-group">
+                    <label for="antigravity-hormone-sync">Antigravity Endocrine Shield</label>
+                    <button id="antigravity-hormone-sync" class="btn active">ACTIVE SYNC</button>
+                </div>
+                <div class="telemetry-readouts">
+                    <div class="readout-box">
+                        <span class="label">METABOLIC INDEX</span>
+                        <span class="value" id="metabolic-val">98.5%</span>
+                    </div>
+                    <div class="readout-box">
+                        <span class="label">STRESS CORTISOL</span>
+                        <span class="value" id="cortisol-val">14.2 µg/dL</span>
+                    </div>
+                </div>
+                <div class="emergency-box">
+                    <button id="override-btn" class="btn emergency">PURGE ENDOCRINE TOXINS</button>
+                </div>
+            </section>
+
+            <!-- Center Panel: Endocrine System Visual & Target Map -->
+            <section class="panel visual-panel">
+                <div class="panel-header">
+                    <h2>HUMAN ENDOCRINE SYSTEM MAP</h2>
+                    <span class="live-tag" id="active-gland-tag">AXIS: PITUITARY</span>
+                </div>
+                <div class="image-wrapper">
+                    <img src="assets/endocrine_system.png" alt="Human Endocrine System HUD" id="hud-image">
+                    <div class="grid-overlay"></div>
+                    <div class="scanner-line"></div>
+                    <!-- Hotspots for glands -->
+                    <div class="hotspot" data-gland="pineal" style="top: 18%; left: 52%;" title="Pineal Gland"></div>
+                    <div class="hotspot" data-gland="pituitary" style="top: 22%; left: 51%;" title="Pituitary Gland"></div>
+                    <div class="hotspot" data-gland="thyroid" style="top: 31%; left: 50%;" title="Thyroid Gland"></div>
+                    <div class="hotspot" data-gland="adrenal" style="top: 52%; left: 45%;" title="Adrenal Glands"></div>
+                    <div class="hotspot" data-gland="pancreas" style="top: 54%; left: 52%;" title="Pancreas"></div>
+                    <div class="hotspot" data-gland="gonads" style="top: 75%; left: 50%;" title="Testes / Ovaries"></div>
+                </div>
+                <div class="waveform-container">
+                    <canvas id="hormoneCanvas" width="600" height="80"></canvas>
+                </div>
+            </section>
+
+            <!-- Right Panel: Hormonal & Biomarker Telemetry -->
+            <section class="panel vitals-panel">
+                <h2>HORMONE CONCENTRATION TELEMETRY</h2>
+                <div class="vital-card">
+                    <span class="v-label">THYROXINE (T4 / T3)</span>
+                    <span class="v-value" id="t4-val">8.4</span> <small>µg/dL</small>
+                    <div class="v-bar"><div class="v-fill" style="width: 70%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">INSULIN / BLOOD GLUCOSE</span>
+                    <span class="v-value"><span id="insulin-val">92</span> <small>mg/dL</small></span>
+                    <div class="v-bar"><div class="v-fill" style="width: 60%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">MELATONIN LEVEL</span>
+                    <span class="v-value" id="melatonin-val">45.2</span> <small>pg/mL</small>
+                    <div class="v-bar"><div class="v-fill warning-fill" style="width: 45%;"></div></div>
+                </div>
+                <div class="vital-card">
+                    <span class="v-label">EPINEPHRINE / NOREPINEPHRINE</span>
+                    <span class="v-value">32.1</span> <small>pg/mL</small>
+                    <div class="v-bar"><div class="v-fill" style="width: 55%;"></div></div>
+                </div>
+                <div class="log-console" id="log-console">
+                    <p>[00:12:01] Endocrine telemetry initialized.</p>
+                    <p>[00:12:05] Antigravity feedback loop locked on Pituitary.</p>
+                    <p>[00:12:10] Homeostasis maintained at 0.38G.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
